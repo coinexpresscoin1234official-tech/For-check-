@@ -1,95 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>CSS Demo</title>
+<style>
+:root{
+--bg:#f5f5f5;--fg:#222;--card:#fff;
+}
+body.dark{--bg:#171717;--fg:#f2f2f2;--card:#252525;}
+*{box-sizing:border-box}
+body{
+margin:0;height:100vh;overflow:hidden;
+display:flex;align-items:center;justify-content:center;
+background:var(--bg);color:var(--fg);
+font-family:Arial,Helvetica,sans-serif;
+transition:.25s;
+}
+.ball{
+width:90px;height:90px;border-radius:50%;
+background:#d62828;
+animation:bounce .9s ease-in-out infinite alternate;
+cursor:pointer;
+}
+@keyframes bounce{
+from{transform:translateY(0)}
+to{transform:translateY(-110px)}
+}
+#theme{
+position:fixed;top:14px;right:14px;
+width:42px;height:42px;border:none;border-radius:50%;
+background:var(--card);cursor:pointer;
+box-shadow:0 2px 10px rgba(0,0,0,.2);
+font-size:18px;
+}
+#info{
+position:fixed;bottom:10px;left:10px;
+width:22px;height:22px;border:none;border-radius:50%;
+background:transparent;color:var(--fg);
+opacity:.45;font-size:12px;cursor:pointer;
+}
+#modal{
+display:none;position:fixed;inset:0;
+background:rgba(0,0,0,.45);
+align-items:center;justify-content:center;
+padding:20px;
+}
+.box{
+max-width:520px;background:var(--card);
+padding:22px;border-radius:14px;
+line-height:1.6;
+}
+.close{
+margin-top:14px;padding:8px 14px;cursor:pointer;
+}
+</style>
+</head>
+<body>
+<button id="theme" title="Theme">🌙</button>
+<button id="info" title="About">i</button>
 
-  const canvas=document.getElementById('snakeCanvas');
-  if(!canvas)return;ck='setSudokuDiff("easy")'>😊 Easy</button>
-          <button class='calc-tab ${sudokuDifficulty==='medium'?'active':''}' onclick='setSudokuDiff("m
-  runBreathPhase();
-}
-let breathacing:1px;text-transform:uppercase'>Time Left</div>
-            <div id='brTimerEl' style='font-family:Rajdhani,sans-serif;font-size:3.5rem;font-weight:700;color:#a78bfa'>60</div>
-          </div>
-        </div>
-        <button idiv>
-    </div>
-  </div>`;
-}
-function calcHeartZones(){
-  const age=parseInt(document.getElementById('hzAge').value);
-  if(!age||age<10||age>100){alert('Enter a valid age between 10 and 100');return;}
-  const maxHR=parseInt(document.getElementById('hzMax').value)||220-age;
-  const zones=[
-    {name:'Zone 1 — Warm Up',    pct:'50–60%', min:Math.round(maxHR*0.50), max:Math.round(maxHR*0.60), color:'#60a5fa', desc:'Light activity, recovery'},
-    {name:'Zone 2 — Fat BuListener('pointermove',function(e){
-    if(!dragging)return;
-    var dx=e.clientX-startX,dy=e.clientY-startY;
-    if(Math.abs(dx)>4||Math.abs(dy)>4)moved=true;
-    if(!moved)return;
-    var w=fab.offsetWidth,h=fab.offsetHeight;
-    var left=Math.min(Math.max(0,startLeft+dx),window.innerWidth-w);
-    var top=Math.min(Math.max(0,startTop+dy),window.innerHeight-h);
-    fab.style.right='';fab.style.bottom='';
-    fab.style.left=left+'px';fab.style.top=top+'px';
-    fabCustomPos={left:left,top:top};
-  });
-  function endDrag(){
-    if(!dragging)return;
-    dragging=false;
-    fab.classList.remove('ks-dragging');
-    if(moved){applyFabPosition();schedulePrefsSave();}
-  }
-  fab.addEventListener('pointerup',endDrag);
-  fab.addEventListener('pointercancel',endDrag);
-  fab.onclick=function(){ if(!moved) toggleChat(); };
-}
-new MutationObserver(function(){syncSettingsUI();}).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+<div class="ball" title="Click"></div>
 
-/* ═══════════════════════ BACKGROUND TIMER PILL ═══════════════════════
-   Shows a small draggable pill (Dynamic-Island style) whenever the
-   Stopwatch and/or Timer has an active session and you're on a
-   different page. If BOTH are running at once, the pill holds two
-   pages you scroll through vertically — swipe up/down to see the
-   other one, tap a page to jump to that tool, tap its ✕ to dismiss. */
-function injectTimerPill(){
-  var pill=document.createElement('div');
-  pill.className='ks-timer-pill';pill.id='ksTimerPill';
-  pill.innerHTML=
-    '<div class="ks-pill-drag" id="ksPillDrag">⠿</div>'+
-    '<div class="ks
-    [[880,t],[1040,t+.42]].forEach(function(pair){
-      var o=ctx.createOscillator(),g=ctx.createGain();
-      o.type='sine';o.frequency.value=pair[0];
-      g.gain.setValueAtTime(0.0001,pair[1]);
-      g.gain.exponentialRampToValueAtTime(0.22,pair[1]+.01);
-      g.gain.exponentialRampToValueAtTime(0.0001,pair[1]+.33);
-      o.connect(g);g.connect(ctx.destination);
-      o.start(pair[1]);o.stop(pair[1]+.35);
-    });
-  }catch(err){}
-}
-function startCdAlarm(){
-  if(cdAlarmPlaying)return;
-  cdAlarmPlaying=true;
-  playPillBeep();
-  cdAlarmInterval=setInterval(playPillBeep,1800);
-}
-function stopCdAlarm(){
-  cdAlarmPlaying=false;
-  clearInterval(cdAlarmInterval);cdAlarmInterval=null;
-}
-function updateTimerPill(){
-  var pill=document.getElementById('ksTimerPill');
-  var pageCd=document.getElementById('ksPillPageCd');
-  var pageSw=document.getElementById('ksPillPageSw');
-  var labelCd=document.getElementById('ksPillLabelCd');
-  var labelSw=document.getElementById('ksPillLabelSw');
-  var restartCd=document.getElementById('ksPillRestartCd');
-  if(!pill||!pageCd||!pageSw)return;
-  // Catch a countdown reaching zero while we're away from its page —
-  // cdTick only runs while the countdown page itself is open.
-  if(cdRunning&&cdEnd<=Date.now()){
-    clearInterval(cdInterval);cdRunning=false;cdTotal=0;
-    cdMarkFinished();
-  }
-  var cdShow=cdAlarmPlaying||((cdRunning||cdTotal>0)&&curPage!=='countdown'&&!cdPillHidden);
-  var swShow=(swRunning||swElapsed>0)&&curPage!=='stopwatch'&&!swPillHiddenaw(); }
-      });
-    }
+<div id="modal">
+<div class="box">
+<h2>About</h2>
+<p>This page is a simple HTML/CSS demonstration.</p>
+<p>Clicking the animated object opens a publicly available YouTube video.</p>
+<p>The linked video and all associated intellectual property remain the property of their respective owners. This page is not affiliated with, endorsed by, or sponsored by YouTube or the video's creator.</p>
+<button class="close">Close</button>
+</div>
+</div>
+
+<script>
+const video="https://youtu.be/dQw4w9WgXcQ?si=hhwKrsbrwrVKZrma";
+
+document.querySelector(".ball").onclick=()=>location.href=video;
+
+theme.onclick=()=>{
+document.body.classList.toggle("dark");
+theme.textContent=document.body.classList.contains("dark")?"☀️":"🌙";
+};
+
+info.onclick=()=>modal.style.display="flex";
+document.querySelector(".close").onclick=()=>modal.style.display="none";
+modal.onclick=e=>{if(e.target===modal)modal.style.display="none";}
+</script>
+</body>
+</html>
