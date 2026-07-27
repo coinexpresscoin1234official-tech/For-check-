@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>KS Tech — Apps by Kiran Sankar</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&family=Rajdhani:wght@400;500;600;700&family=Press+Start+2P&family=Share+Tech+Mono&family=Playfair+Display:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="styles.css"/>
+
+</head>
+<body>
+<canvas id="stars"></canvas>
+
+<!-- Decorative floating particles (Phase 3 visual layer — no JS, no IDs used by scripts) -->
+<div class="forest-particles" aria-hidden="true">
+  <span style="left:6%;top:80%;animation-delay:0s;animation-duration:13s;"></span>
+  <span style="left:14%;top:60%;animation-delay:1.5s;animation-duration:15s;"></span>
+  <span style="left:22%;top:90%;animation-delay:3s;animation-duration:11s;"></span>
+  <span style="left:31%;top:70%;animation-delay:.5s;animation-duration:14s;"></span>
+  <span style="left:40%;top:85%;animation-delay:4s;animation-duration:12s;"></span>
+  <span style="left:49%;top:65%;animation-delay:2s;animation-duration:16s;"></span>
+  <span style="left:58%;top:88%;animation-delay:5s;animation-duration:13s;"></span>
+  <span style="left:67%;top:72%;animation-delay:1s;animation-duration:15s;"></span>
+  <span style="left:76%;top:92%;animation-delay:3.5s;animation-duration:11s;"></span>
+  <span style="left:85%;top:68%;animation-delay:2.5s;animation-duration:14s;"></span>
+  <span style="left:92%;top:82%;animation-delay:0.8s;animation-duration:12s;"></span>
+  <span style="left:11%;top:40%;animation-delay:4.5s;animation-duration:17s;"></span>
+  <span style="left:63%;top:35%;animation-delay:1.2s;animation-duration:16s;"></span>
+  <span style="left:80%;top:45%;animation-delay:3.2s;animation-duration:13s;"></span>
+</div>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <!-- Logo + tagline -->
+  <div class="nav-logo-wrap" onclick="go('home')">
+    <div class="nav-logo">KS<span style="-webkit-text-fill-color:inherit;color:inherit"> Tech</span></div>
+  </div>
+
+  <!-- Middle cycling tagline — mobile only -->
+
+  <!-- Desktop links -->
+  <div class="nav-right">
+    <button class="nav-link" onclick="go('home')">🏠 Home</button>
+    <button class="nav-link" onclick="go('apps')">⚡ Apps</button>
+    <button class="nav-link" onclick="go('games')">🎮 Games</button>
+    <button class="nav-link" onclick="go('health')">🩺 Health</button>
+    <button class="nav-link" onclick="go('fun')">🎉 Fun</button>
+    <button class="nav-link" onclick="go('science')">🔬 Science</button>
+    <button class="nav-link" onclick="go('services')">🌐 Services</button>
+    <button class="nav-link" onclick="go('community')">💬 Community</button>
+    <button class="nav-link" onclick="scrollContact()">✉️ Contact</button>
+    <span id="navAuthSlotDesktop"></span>
+    <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme">
+      <span class="theme-icon moon">🌙</span>
+      <span class="theme-icon sun">☀️</span>
+    </button>
+    <button class="settings-icon-btn" onclick="openSettings()" title="Settings" aria-label="Settings">⚙️</button>
+  </div>
+
+  <!-- Mobile right: grid-dots (LEFT) + theme toggle (RIGHT) -->
+  <div class="nav-mobile-right">
+    <button class="nav-grid-btn" id="navGridBtn" onclick="toggleMobileNav()" aria-label="Menu">
+      <span class="nav-grid-btn-icon">☰</span>
+      <span>Menu</span>
+    </button>
+    <span id="navAuthSlotMobile"></span>
+    <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme">
+      <span class="theme-icon moon">🌙</span>
+      <span class="theme-icon sun">☀️</span>
+    </button>
+    <button class="settings-icon-btn" onclick="openSettings()" title="Settings" aria-label="Settings">⚙️</button>
+  </div>
+</nav>
+
+<!-- Mobile dropdown menu -->
+<div class="nav-mobile-menu" id="navMobileMenu">
+  <div class="nav-mobile-section">Navigate</div>
+  <button class="nav-mobile-link" onclick="mobileGo('home')">
+    <div class="nav-mobile-icon">🏠</div>
+    <span class="nav-mobile-label">Home</span>
+    <span class="nav-mobile-arrow">›</span>
+  </button>
+  <button class="nav-mobile-link" onclick="mobileGo('apps')">
+    <div class="nav-mobile-icon">⚡</div>
+    <span class="nav-mobile-label">Apps</span>
+    <span class="nav-mobile-arrow">›</span>
+  </button>
+  <button class="nav-mobile-link" onclick="mobileGo('games')">
+    <div class="nav-mobile-icon">🎮</div>
+    <span class="nav-mobile-label">Games</span>
+    <span class="nav-mobile-arrow">›</span>
+  </button>
+  <button class="nav-mobile-link" onclick="mobileGo('health')">
+    <div class="nav-mobile-icon">🩺</div>
+    <span class="nav-mobile-label">Health Hub</span>
+    <span class="nav-mobile-arrow">›</span>
+  </button>
+  <button class="nav-mobile-link" onclick="mobileGo('fun')">
+    <div class="nav-mobile-icon">🎉</div>
+    <span class="nav-mobile-label">Fun</span>
+    <span class="nav-mobile-arrow">›</span>
+  </button>
+  <button class="nav-mobile-link" onclick="mobileGo('science')">
+    <div class="nav-mobile-icon">🔬</div>
+    <span class="nav-mobile-label">Science Solver</span>
+    <span class="nav-mobile-arrow">›</span>
+  </button>
+  <button class="nav-mobile-link" onclick="mobileGo('services')">
+    <div class="nav-mobile-icon">🌐</div>
+    <span class="nav-mobile-label">Other Services</span>
+    <span class="nav-mobile-arrow">›</span>
+  </button>
+  <button class="nav-mobile-link" onclick="mobileGo('community')">
+    <div class="nav-mobile-icon">💬</div>
+    <span class="nav-mobile-label">Community</span>
+    <span class="nav-mobile-arrow">›</span>
+  </button>
+  <button class="nav-mobile-link" onclick="mobileScrollContact()">
+    <div class="nav-mobile-icon">✉️</div>
+    <span class="nav-mobile-label">Contact</span>
+    <span class="nav-mobile-arrow">›</span>
+  </button>
+  <button class="nav-mobile-link" onclick="toggleMobileNav();ksNavAccountClick()">
+    <div class="nav-mobile-icon">👤</div>
+    <span class="nav-mobile-label" id="navMobileAccountLabel">Sign In / Account</span>
+    <span class="nav-mobile-arrow">›</span>
+  </button>
+  <button class="nav-mobile-link" onclick="toggleMobileNav();openSettings()">
+    <div class="nav-mobile-icon">⚙️</div>
+    <span class="nav-mobile-label">Settings</span>
+    <span class="nav-mobile-arrow">›</span>
+  </button>
+  <button class="nav-mobile-link" onclick="toggleMobileNav();go('about')">
+    <div class="nav-mobile-icon">ℹ️</div>
+    <span class="nav-mobile-label">About</span>
+    <span class="nav-mobile-arrow">›</span>
+  </button>
+  <div class="nav-mobile-divider"></div>
+  <div class="nav-mobile-section">Connect</div>
+  <div class="nav-mobile-social">
+    <a class="nav-mobile-social-btn" href="https://instagram.com/kstech_official" target="_blank" rel="noopener">
+      📸 Instagram
+    </a>
+    <a class="nav-mobile-social-btn" href="mailto:contactkstech@gmail.com">
+      ✉️ Email
+    </a>
+  </div>
+</div>
+
+<!-- PUBLIC ANNOUNCEMENT BANNER (added) — public read, live via onSnapshot -->
+<div id="announcementStack" class="announcement-stack" aria-live="polite"></div>
+
+<div id="app"></div>
+
+<!-- SETTINGS DRAWER (added) -->
+<div class="settings-overlay" id="settingsOverlay" onclick="closeSettings()"></div>
+<div class="settings-drawer" id="settingsDrawer">
+  <div class="settings-drawer-header">
+    <h3>⚙️ Settings</h3>
+    <button class="settings-close-btn" onclick="closeSettings()" aria-label="Close settings">✕</button>
+  </div>
+  <div class="settings-body" id="settingsBody">
+  </div>
+</div>
+
+<script src="scripts/app.js"></script>
+<script src="scripts/router.js"></script>
+<script src="scripts/ui.js"></script>
+<script src="scripts/tools.js"></script>
+<script src="scripts/community.js"></script>
+<script src="scripts/settings.js"></script>
+<script src="scripts/admin.js"></script>
+
+  <script type="module" src="firebase.js"></script>
+
+</body>
+</html>
+
+ 

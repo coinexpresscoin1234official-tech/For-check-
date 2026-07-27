@@ -1,0 +1,4245 @@
+/* ═══════════════════════ AGE CALCULATOR ═══════════════════════ */
+let ageTimer;
+function renderAge(){
+  appEl.innerHTML=`<div class='page-wrap'>
+    <div class='back-row'><button class='back-btn' onclick="go('apps')">← Apps</button></div>
+    <div class='inner-card'>
+      <h2>🎂 Age Calculator</h2>
+      <p class='subtitle'>Your exact age — precise to the second.</p>
+
+      <label class='field-label'>Your Name</label>
+      <input class='ks-input' id='uname' placeholder='e.g. Kiran Sankar'>
+
+      <div class='mt'><label class='field-label'>Date of Birth</label>
+      <div class='grid-3'>
+        <div>
+          <small style='color:var(--muted);font-size:12px'>Day (1–31)</small>
+          <input class='ks-input mt-sm' id='dobDD' placeholder='DD' type='number' min='1' max='31' oninput='validateDobField(this,1,31)'>
+          <div class='helper-txt' id='dobDDHelp'>Day must be 1–31</div>
+        </div>
+        <div>
+          <small style='color:var(--muted);font-size:12px'>Month (1–12)</small>
+          <input class='ks-input mt-sm' id='dobMM' placeholder='MM' type='number' min='1' max='12' oninput='validateDobField(this,1,12)'>
+          <div class='helper-txt' id='dobMMHelp'>Month must be 1–12</div>
+        </div>
+        <div>
+          <small style='color:var(--muted);font-size:12px'>Year (1–present)</small>
+          <input class='ks-input mt-sm' id='dobYY' placeholder='YYYY' type='number' min='1' max='9999' oninput='validateDobYY(this)'>
+          <div class='helper-txt' id='dobYYHelp'>Enter a valid year</div>
+        </div>
+      </div>
+      <div class='helper-txt' id='dobHelp'>⚠️ Please enter a valid date.</div></div>
+
+      <div class='mt'><label class='field-label'>Target Age <span style='color:var(--sub);font-size:11px;font-weight:400'>(optional)</span></label>
+      <input class='ks-input' id='targetAge' placeholder='e.g. 30 — countdown to this age' type='number' min='1' max='150' oninput='validateTargetAge(this)'>
+      <div class='helper-txt' id='targetAgeHelp'>Target age must be between 1 and 150</div></div>
+
+      <div style='border-top:1px solid var(--border);margin:20px 0;padding-top:16px'>
+        <div class='field-label' style='margin-bottom:4px'>📅 My Age on a Specific Date <span style='color:var(--sub);font-size:11px;font-weight:400'>(optional)</span></div>
+        <p style='font-size:12px;color:var(--muted);margin-bottom:10px'>Enter any past or future date to see what your age was or will be on that day.</p>
+        <div class='grid-3'>
+          <div>
+            <small style='color:var(--muted);font-size:12px'>Day</small>
+            <input class='ks-input mt-sm' id='specDD' placeholder='DD' type='number' min='1' max='31'>
+          </div>
+          <div>
+            <small style='color:var(--muted);font-size:12px'>Month</small>
+            <input class='ks-input mt-sm' id='specMM' placeholder='MM' type='number' min='1' max='12'>
+          </div>
+          <div>
+            <small style='color:var(--muted);font-size:12px'>Year</small>
+            <input class='ks-input mt-sm' id='specYY' placeholder='YYYY' type='number' min='1' max='9999'>
+          </div>
+        </div>
+        <div class='helper-txt' id='specHelp'>⚠️ Enter a valid date.</div>
+      </div>
+
+      <div style='border-top:1px solid var(--border);margin:4px 0 20px;padding-top:16px'>
+        <div class='field-label' style='margin-bottom:4px'>🎯 Date of My Milestone Age <span style='color:var(--sub);font-size:11px;font-weight:400'>(optional)</span></div>
+        <p style='font-size:12px;color:var(--muted);margin-bottom:10px'>Enter an age milestone to find the exact date you reached it.</p>
+        <div class='grid-3'>
+          <div>
+            <small style='color:var(--muted);font-size:12px'>Years</small>
+            <input class='ks-input mt-sm' id='msYears' placeholder='e.g. 18' type='number' min='0'>
+          </div>
+          <div>
+            <small style='color:var(--muted);font-size:12px'>Months</small>
+            <input class='ks-input mt-sm' id='msMonths' placeholder='e.g. 6' type='number' min='0' max='11'>
+          </div>
+          <div>
+            <small style='color:var(--muted);font-size:12px'>Days</small>
+            <input class='ks-input mt-sm' id='msDays' placeholder='e.g. 15' type='number' min='0' max='30'>
+          </div>
+        </div>
+        <div class='helper-txt' id='msHelp'>⚠️ Enter at least years, months or days.</div>
+      </div>
+
+      <div class='mt'><button class='btn btn-primary' onclick='startAgeCalc()'>⏱️ Calculate Now</button></div>
+      <div id='ageResult'></div>
+      ${appFooter('age')}
+    </div>
+  </div>`;
+}
+function validateDobYY(el){
+  const v=parseInt(el.value);
+  const maxY=new Date().getFullYear();
+  const helpEl=document.getElementById('dobYYHelp');
+  if(el.value===''){ el.classList.remove('err'); helpEl.style.display='none'; return; }
+  if(isNaN(v)||v<1||v>maxY){ el.classList.add('err'); helpEl.textContent='Year must be between 1 and '+maxY; helpEl.style.display='block'; }
+  else{ el.classList.remove('err'); helpEl.style.display='none'; }
+}
+function validateDobField(el, min, max){
+  const v=parseInt(el.value);
+  const helpId=el.id+'Help';
+  const helpEl=document.getElementById(helpId);
+  if(el.value===''){ el.classList.remove('err'); if(helpEl)helpEl.style.display='none'; return; }
+  if(isNaN(v)||v<min||v>max){ el.classList.add('err'); if(helpEl)helpEl.style.display='block'; }
+  else{ el.classList.remove('err'); if(helpEl)helpEl.style.display='none'; }
+}
+function validateTargetAge(el){
+  const v=parseInt(el.value);
+  const helpEl=document.getElementById('targetAgeHelp');
+  if(el.value===''){ el.classList.remove('err'); helpEl.style.display='none'; return; }
+  if(isNaN(v)||v<1||v>150){ el.classList.add('err'); helpEl.style.display='block'; }
+  else{ el.classList.remove('err'); helpEl.style.display='none'; }
+}
+function parseDOBParts(){
+  const dd=+dobDD.value,mm=+dobMM.value,yy=+dobYY.value;
+  if(!dd||!mm||!yy||dd<1||dd>31||mm<1||mm>12||yy<1){
+    dobHelp.style.display='block';
+    [dobDD,dobMM,dobYY].forEach(i=>i.classList.add('err'));return null;
+  }
+  // Use setFullYear to correctly handle years 1-99 (JS Date quirk)
+  const test=new Date(0);
+  test.setFullYear(yy, mm-1, dd);
+  if(test.getFullYear()!==yy||test.getMonth()!==mm-1||test.getDate()!==dd){
+    dobHelp.style.display='block';
+    [dobDD,dobMM,dobYY].forEach(i=>i.classList.add('err'));return null;
+  }
+  dobHelp.style.display='none';[dobDD,dobMM,dobYY].forEach(i=>i.classList.remove('err'));
+  return test;
+}
+function ageBreakdown(ms){
+  let diff=Math.abs(ms);
+  const y=Math.floor(diff/31557600000);diff-=y*31557600000;
+  const mo=Math.floor(diff/2629800000);diff-=mo*2629800000;
+  const d=Math.floor(diff/86400000);diff-=d*86400000;
+  const h=Math.floor(diff/3600000);diff-=h*3600000;
+  const mi=Math.floor(diff/60000);diff-=mi*60000;
+  const s=Math.floor(diff/1000);
+  return {y,mo,d,h,mi,s};
+}
+function fmtAge(b){
+  const u=(n,label)=>`<span style='font-family:Rajdhani, sans-serif;font-weight:600'>${n}</span><span style='font-family:Rajdhani, sans-serif;font-size:0.65em;font-weight:400;opacity:0.75;margin-left:3px'>${label}</span>`;
+  return `${u(b.y,'yrs')} &nbsp; ${u(b.mo,'Mo')} &nbsp; ${u(b.d,'days')} &nbsp; ${u(b.h,'hrs')} &nbsp; ${u(b.mi,'min')} &nbsp; ${u(b.s,'sec')}`;
+}
+function fmtDateFull(date){
+  const days=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const months=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  return days[date.getDay()]+', '+date.getDate()+' '+months[date.getMonth()]+' '+date.getFullYear();
+}
+
+function startAgeCalc(){
+  clearInterval(ageTimer);
+  const dob=parseDOBParts();if(!dob)return;
+  const name=uname.value||'You';
+  const target=parseFloat(targetAge.value);
+
+  // ── Feature 1: Age on specific date ──
+  let specResult='';
+  const sdd=parseInt(document.getElementById('specDD').value);
+  const smm=parseInt(document.getElementById('specMM').value);
+  const syy=parseInt(document.getElementById('specYY').value);
+  const specHelp=document.getElementById('specHelp');
+  const hasSpec=document.getElementById('specDD').value||document.getElementById('specMM').value||document.getElementById('specYY').value;
+  if(hasSpec){
+    if(!sdd||!smm||!syy||sdd<1||sdd>31||smm<1||smm>12||syy<1){
+      specHelp.style.display='block';return;
+    }
+    const specDate=new Date(syy,smm-1,sdd);
+    if(specDate.getFullYear()!==syy||specDate.getMonth()!==smm-1||specDate.getDate()!==sdd){
+      specHelp.style.display='block';return;
+    }
+    specHelp.style.display='none';
+    if(specDate<dob){
+      specResult=`<div style='margin-top:14px;padding-top:14px;border-top:1px solid var(--border)'>
+        <p style='color:var(--muted);font-size:13px'>📅 On ${fmtDateFull(specDate)}</p>
+        <p style='color:#f87171;font-size:13px'>⚠️ This date is before your date of birth.</p>
+      </div>`;
+    } else {
+      const diff=specDate-dob;
+      const b=ageBreakdown(diff);
+      const isFuture=specDate>new Date();
+      specResult=`<div style='margin-top:14px;padding-top:14px;border-top:1px solid var(--border)'>
+        <p style='color:var(--muted);font-size:13px'>📅 ${isFuture?'On':'On'} ${fmtDateFull(specDate)} ${isFuture?'you will be':'you were'}:</p>
+        <strong style='display:block;margin-top:4px'>${fmtAge(b)}</strong>
+      </div>`;
+    }
+  } else { specHelp.style.display='none'; }
+
+  // ── Feature 2: Date of milestone ──
+  let msResult='';
+  const msY=parseInt(document.getElementById('msYears').value)||0;
+  const msM=parseInt(document.getElementById('msMonths').value)||0;
+  const msD=parseInt(document.getElementById('msDays').value)||0;
+  const msHelp=document.getElementById('msHelp');
+  const hasMs=document.getElementById('msYears').value||document.getElementById('msMonths').value||document.getElementById('msDays').value;
+  if(hasMs){
+    if(msY===0&&msM===0&&msD===0){msHelp.style.display='block';return;}
+    msHelp.style.display='none';
+    const msDate=new Date(dob);
+    msDate.setFullYear(msDate.getFullYear()+msY);
+    msDate.setMonth(msDate.getMonth()+msM);
+    msDate.setDate(msDate.getDate()+msD);
+    const isFuture=msDate>new Date();
+    const timeAgo=isFuture?'':Math.floor((new Date()-msDate)/86400000)+' days ago';
+    msResult=`<div style='margin-top:14px;padding-top:14px;border-top:1px solid var(--border)'>
+      <p style='color:var(--muted);font-size:13px'>🎯 You ${isFuture?'will reach':'reached'} ${msY>0?msY+' yrs ':''} ${msM>0?msM+' Mo ':''} ${msD>0?msD+' days':''}on:</p>
+      <strong style='display:block;margin-top:4px;color:var(--accent)'>${fmtDateFull(msDate)}</strong>
+      ${!isFuture?`<p style='font-size:12px;color:var(--muted);margin-top:4px'>That was ${timeAgo}.</p>`:`<p style='font-size:12px;color:#4ade80;margin-top:4px'>That is in the future! 🌟</p>`}
+    </div>`;
+  } else { msHelp.style.display='none'; }
+
+  // ── Build static shell once (no flicker) ──
+  let shell=`<div class='result-box'>
+    <p>${name}, your exact age right now is:</p>
+    <strong id='ageDisplay' style='display:block;line-height:1.8'></strong>`;
+  if(!isNaN(target)) shell+=`<div id='targetSection' style='margin-top:12px'></div>`;
+  shell+=specResult+msResult+`</div>`;
+  ageResult.innerHTML=shell;
+
+  function tick(){
+    const now=new Date();
+    const b=ageBreakdown(now-dob);
+    const ageEl=document.getElementById('ageDisplay');
+    if(ageEl) ageEl.innerHTML=fmtAge(b);
+    if(!isNaN(target)){
+      const tEl=document.getElementById('targetSection');if(!tEl)return;
+      const remain=target*31557600000-(now-dob);
+      if(remain>0){
+        const r=ageBreakdown(remain);
+        tEl.innerHTML=`<p style='color:var(--muted);font-size:13px;margin-top:4px'>⏳ Time left to age ${target}:</p><strong>${fmtAge(r)}</strong>`;
+      }else{
+        tEl.innerHTML=`<p style='margin-top:4px'>✅ You already crossed age ${target}!</p>`;
+      }
+    }
+  }
+  tick();
+  ageTimer=setInterval(tick,1000);
+}
+
+/* ═══════════════════════ LCM & HCF ═══════════════════════ */
+let parsedNums=[];
+function renderLcmHcf(){
+  appEl.innerHTML=`<div class='page-wrap'>
+    <div class='back-row'><button class='back-btn' onclick="go('apps')">← Apps</button></div>
+    <div class='inner-card'>
+      <h2>🔢 LCM & HCF Calculator</h2>
+      <p class='subtitle'>Enter up to 10 numbers separated by commas.</p>
+      <label class='field-label'>Numbers</label>
+      <input class='ks-input' id='nums' placeholder='e.g. 12, 18, 24'>
+      <div class='helper-txt' id='numsHelp'>⚠️ Enter 2–10 valid numbers.</div>
+      <div class='mt'><button class='btn btn-primary' onclick='processNums()'>🔍 Process</button></div>
+      <div id='lhPopup'></div><div id='lhResult'></div>
+      ${appFooter('lcmhcf')}
+    </div>
+  </div>`;
+}
+function processNums(){
+  const raw=nums.value.split(',').map(n=>parseInt(n.trim())).filter(n=>!isNaN(n));
+  if(raw.length<2||raw.length>10){nums.classList.add('err');numsHelp.style.display='block';return;}
+  nums.classList.remove('err');numsHelp.style.display='none';parsedNums=raw;
+  lhPopup.innerHTML=`<div class='result-box reveal'><p>✅ ${raw.length} numbers accepted.</p>
+    <div style='display:flex;gap:10px;margin-top:12px;flex-wrap:wrap'>
+      <button class='btn btn-primary' onclick='showLCM()'>📐 LCM</button>
+      <button class='btn btn-secondary' onclick='showHCF()'>📏 HCF</button>
+    </div></div>`;
+}
+function gcd(a,b){return b?gcd(b,a%b):a;}
+function lcm(a,b){return a*b/gcd(a,b);}
+function showLCM(){lhResult.innerHTML=`<div class='result-box reveal'><p>LCM of [${parsedNums.join(', ')}]</p><strong>${parsedNums.reduce((a,b)=>lcm(a,b))}</strong></div>`;}
+function showHCF(){lhResult.innerHTML=`<div class='result-box reveal'><p>HCF of [${parsedNums.join(', ')}]</p><strong>${parsedNums.reduce((a,b)=>gcd(a,b))}</strong></div>`;}
+
+/* ═══════════════════════ BMI ═══════════════════════ */
+function renderBmi(){
+  appEl.innerHTML=`<div class='page-wrap'>
+    <div class='back-row'><button class='back-btn' onclick="go('apps')">← Apps</button></div>
+    <div class='inner-card'>
+      <h2>⚖️ BMI Calculator</h2>
+      <p class='subtitle'>Body Mass Index is universal — it does not vary by sex or gender.</p>
+      <div class='grid-2 mt-sm'>
+        <div><label class='field-label'>Age</label><input class='ks-input' id='ageB' placeholder='e.g. 25' type='number'></div>
+        <div><label class='field-label'>Sex</label>
+          <select class='ks-select' id='sex'>
+            <option>Male</option><option>Female</option><option>Third Gender</option><option>Rather Not Say</option>
+          </select>
+        </div>
+      </div>
+      <div class='grid-2 mt'>
+        <div><label class='field-label'>Weight Unit</label><select class='ks-select' id='wUnit'><option value='kg'>Kilograms (kg)</option><option value='lb'>Pounds (lb)</option></select></div>
+        <div><label class='field-label'>Weight</label><input class='ks-input' id='w' placeholder='Enter weight' type='number'></div>
+      </div>
+      <div class='grid-2 mt'>
+        <div><label class='field-label'>Height Unit</label>
+          <select class='ks-select' id='hUnit'><option value='m'>Metres (m)</option><option value='cm'>Centimetres (cm)</option><option value='ft'>Feet (ft)</option><option value='in'>Inches (in)</option></select>
+        </div>
+        <div><label class='field-label'>Height</label><input class='ks-input' id='h' placeholder='Enter height' type='number'></div>
+      </div>
+      <div class='helper-txt' id='bmiHelp'>⚠️ Enter valid height and weight.</div>
+      <div class='mt'><button class='btn btn-primary' onclick='calcBmi()'>📊 Calculate BMI</button></div>
+      <div id='bmiResult'></div>
+      <div class='mt reveal'>
+        <h3 style='font-family:Syne,sans-serif;font-size:1rem;margin-bottom:10px;'>📋 WHO Classification</h3>
+        <table class='who-table'>
+          <tr><th>Category</th><th>BMI Range</th></tr>
+          <tr><td><span class='tag uw'>Underweight</span></td><td>&lt; 18.5</td></tr>
+          <tr><td><span class='tag nm'>Normal</span></td><td>18.5 – 24.9</td></tr>
+          <tr><td><span class='tag ow'>Overweight</span></td><td>25 – 29.9</td></tr>
+          <tr><td><span class='tag ob'>Obese</span></td><td>≥ 30</td></tr>
+        </table>
+      </div>
+      ${appFooter('bmi')}
+    </div>
+  </div>`;
+}
+function calcBmi(){
+  let weight=parseFloat(w.value),height=parseFloat(h.value);
+  if(!weight||!height){bmiHelp.style.display='block';return;}
+  bmiHelp.style.display='none';
+  if(wUnit.value==='lb')weight*=0.453592;
+  if(hUnit.value==='cm')height/=100;
+  if(hUnit.value==='ft')height*=0.3048;
+  if(hUnit.value==='in')height*=0.0254;
+  const bmi=weight/(height*height);
+  let status='',tagClass='';
+  if(bmi<18.5){status='Underweight 🔵';tagClass='uw';}
+  else if(bmi<25){status='Normal ✅';tagClass='nm';}
+  else if(bmi<30){status='Overweight ⚠️';tagClass='ow';}
+  else{status='Obese 🔴';tagClass='ob';}
+  bmiResult.innerHTML=`<div class='result-box reveal'>
+    <p>Your BMI</p><strong>${bmi.toFixed(2)}</strong>
+    <p style='margin-top:10px'>WHO Status: <span class='tag ${tagClass}'>${status}</span></p>
+  </div>`;
+}
+
+/* ═══════════════════════ TYPING SPEED TEST ═══════════════════════ */
+const TYPING_TEXTS=[
+  "The quick brown fox jumps over the lazy dog. Programming is the art of telling another human what one wants the computer to do. Every great developer you know got there by solving problems they were unqualified to solve.",
+  "Technology is best when it brings people together. The science of today is the technology of tomorrow. Innovation distinguishes between a leader and a follower. Stay hungry, stay foolish.",
+  "First solve the problem then write the code. Any fool can write code that a computer can understand. Good programmers write code that humans can understand. Clean code always looks like it was written by someone who cares.",
+  "The computer was born to solve problems that did not exist before. Software is a great combination of artistry and engineering. The best error message is the one that never shows up. Simplicity is the soul of efficiency.",
+  "Learning to write programs stretches your mind and helps you think better. Code is like humor. When you have to explain it, it is bad. Fix the cause not the symptom. Make it work then make it right."
+];
+let typingTimer=null,typingStarted=false,typingDone=false;
+
+function renderTypingTest(){
+  typingStarted=false;typingDone=false;clearInterval(typingTimer);
+  const text=TYPING_TEXTS[Math.floor(Math.random()*TYPING_TEXTS.length)];
+  appEl.innerHTML=`<div class='page-wrap'>
+    <div class='back-row'><button class='back-btn' onclick="go('apps')">← Apps</button></div>
+    <div class='inner-card'>
+      <h2>⌨️ Typing Speed Test</h2>
+      <p class='subtitle'>Type the paragraph below as fast and accurately as you can. Timer starts on your first keystroke! ⏱️</p>
+
+      <div id='tpPrompt' style='background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:18px;margin-bottom:14px;font-size:15px;line-height:1.9;letter-spacing:.3px;font-family:DM Sans,sans-serif;word-break:break-word;white-space:normal;overflow-wrap:break-word;max-width:100%;box-sizing:border-box' data-text='${text}'>${renderPromptChars(text)}</div>
+
+      <div style='display:flex;align-items:center;justify-content:space-between;margin-bottom:8px'>
+        <label class='field-label' style='margin:0'>Start Typing Below</label>
+        <div style='display:flex;gap:16px;font-size:13px;color:var(--muted)'>
+          <span>⏱️ <span id='tpTime'>0</span>s</span>
+          <span>🎯 <span id='tpAcc'>100</span>%</span>
+          <span>⚡ <span id='tpWpm'>0</span> WPM</span>
+        </div>
+      </div>
+
+      <div style='background:var(--bg2);border:1.5px solid var(--border);border-radius:14px;padding:4px'>
+        <textarea id='tpInput' class='ks-input' rows='4' placeholder='Start typing here...' oninput='onTypingInput(event)' style='background:transparent;border:none;box-shadow:none;resize:none;line-height:1.8;font-size:15px' spellcheck='false' autocomplete='off' autocorrect='off' autocapitalize='off'></textarea>
+      </div>
+
+      <div style='margin-top:12px;display:flex;gap:10px;flex-wrap:wrap'>
+        <button class='btn btn-primary' onclick='resetTypingTest()'>🔄 New Test</button>
+      </div>
+
+      <div id='tpResult'></div>
+      ${appFooter('typing')}
+    </div>
+  </div>`;
+}
+
+function renderPromptChars(text){
+  return text.split('').map((c,i)=>`<span id='tc${i}' style='border-radius:3px'>${c==' '?'&nbsp;':c}</span>`).join('');
+}
+
+function onTypingInput(e){
+  if(typingDone)return;
+  const input=document.getElementById('tpInput');
+  const val=input.value;
+  const prompt=document.getElementById('tpPrompt');
+  const text=prompt.getAttribute('data-text');
+
+  if(!typingStarted&&val.length>0){
+    typingStarted=true;
+    const startTime=Date.now();
+    window._typingStart=startTime;
+    typingTimer=setInterval(()=>{
+      if(!typingStarted||typingDone){clearInterval(typingTimer);return;}
+      const elapsed=Math.floor((Date.now()-window._typingStart)/1000);
+      document.getElementById('tpTime').textContent=elapsed;
+      const words=val.trim().split(/\s+/).filter(w=>w).length;
+      const wpm=elapsed>0?Math.round((words/elapsed)*60):0;
+      document.getElementById('tpWpm').textContent=wpm;
+    },500);
+  }
+
+  // colour each character
+  let correct=0;
+  for(let i=0;i<text.length;i++){
+    const span=document.getElementById('tc'+i);
+    if(!span)continue;
+    if(i<val.length){
+      if(val[i]===text[i]){
+        span.style.background='rgba(74,222,128,0.2)';span.style.color='#4ade80';correct++;
+      }else{
+        span.style.background='rgba(248,113,113,0.2)';span.style.color='#f87171';
+      }
+    }else{
+      span.style.background='';span.style.color='';
+    }
+  }
+  const acc=val.length>0?Math.round((correct/Math.min(val.length,text.length))*100):100;
+  document.getElementById('tpAcc').textContent=acc;
+
+  // finished
+  if(val.length>=text.length){
+    typingDone=true;clearInterval(typingTimer);
+    const elapsed=(Date.now()-window._typingStart)/1000;
+    const words=text.trim().split(/\s+/).length;
+    const wpm=Math.round((words/elapsed)*60);
+    const finalAcc=Math.round((correct/text.length)*100);
+    let grade='',emoji='';
+    if(wpm>=80&&finalAcc>=95){grade='Expert 🏆';emoji='🔥';}
+    else if(wpm>=60&&finalAcc>=90){grade='Advanced ⭐';emoji='💪';}
+    else if(wpm>=40&&finalAcc>=85){grade='Intermediate 👍';emoji='😊';}
+    else if(wpm>=20){grade='Beginner 🌱';emoji='😅';}
+    else{grade='Keep Practicing 💡';emoji='🤔';}
+    document.getElementById('tpResult').innerHTML=`<div class='result-box reveal' style='text-align:center;margin-top:14px'>
+      <div style='font-size:2.5rem;margin-bottom:8px'>${emoji}</div>
+      <table class='who-table' style='text-align:left'>
+        <tr><td>⚡ WPM</td><td><strong style='color:var(--accent);font-size:1.3rem'>${wpm}</strong></td></tr>
+        <tr><td>🎯 Accuracy</td><td><strong style='color:${finalAcc>=90?"#4ade80":"#f87171"}'>${finalAcc}%</strong></td></tr>
+        <tr><td>⏱️ Time Taken</td><td><strong>${elapsed.toFixed(1)}s</strong></td></tr>
+        <tr><td>📊 Level</td><td><strong>${grade}</strong></td></tr>
+      </table>
+      <button class='btn btn-primary' style='margin-top:14px;width:100%' onclick='resetTypingTest()'>🔄 Try Again</button>
+    </div>`;
+  }
+}
+
+function resetTypingTest(){
+  clearInterval(typingTimer);typingStarted=false;typingDone=false;
+  renderTypingTest();
+}
+
+/* ═══════════════════════ DAY FINDER ═══════════════════════ */
+const WEEKDAYS=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const MONTHS_SHORT=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const DAY_PHRASES=['Running DNA analysis...','Consulting Elon Musk...','Hacking NASA for data...','Calling Stephen Hawking...','Calculating with fingers...','Missed call from Jadu...','Watching Instagram reels...','Going to White House...','Finalising prediction...'];
+let dayFinderTimer=null;
+function fmtShort(d){return d.getDate()+' '+MONTHS_SHORT[d.getMonth()]+' '+d.getFullYear();}
+function renderDayFinder(){
+  appEl.innerHTML=`<div class='page-wrap'>
+    <div class='back-row'><button class='back-btn' onclick="go('apps')">← Apps</button></div>
+    <div class='inner-card'>
+      <h2>📅 What Day Was It?</h2>
+      <p class='subtitle'>Enter any date and discover what day of the week it was.</p>
+      <div id='dfForm'>
+        <label class='field-label'>Enter Date</label>
+        <div class='grid-3'>
+          <div><small style='color:var(--muted);font-size:12px'>Day</small><input class='ks-input mt-sm' id='dfDay' placeholder='DD' type='number' min='1' max='31'></div>
+          <div><small style='color:var(--muted);font-size:12px'>Month</small><input class='ks-input mt-sm' id='dfMonth' placeholder='MM' type='number' min='1' max='12'></div>
+          <div><small style='color:var(--muted);font-size:12px'>Year</small><input class='ks-input mt-sm' id='dfYear' placeholder='YYYY' type='number'></div>
+        </div>
+        <div class='helper-txt' id='dfHelp'>⚠️ Please enter a valid date.</div>
+        <div class='mt'><button class='btn btn-primary' onclick='startDayFinder()'>🗓️ Find the Day</button></div>
+      </div>
+      <div class='day-loading' id='dfLoading'>
+        <div class='spinner-wrap'>
+          <div class='sp-ring r1'></div><div class='sp-ring r2'></div><div class='sp-ring r3'></div>
+          <div class='sp-center'></div>
+        </div>
+        <div class='load-phrase' id='dfPhrase'></div>
+      </div>
+      <div id='dfResult'></div>
+      ${appFooter('dayf')}
+    </div>
+  </div>`;
+}
+function startDayFinder(){
+  const day=parseInt(dfDay.value),month=parseInt(dfMonth.value),year=parseInt(dfYear.value);
+  dfHelp.style.display='none';
+  if(!day||!month||!year||day<1||day>31||month<1||month>12||year<1||year>9999){dfHelp.style.display='block';return;}
+  const test=new Date(year,month-1,day);
+  if(test.getFullYear()!==year||test.getMonth()!==month-1||test.getDate()!==day){dfHelp.style.display='block';return;}
+  dfForm.style.display='none';dfResult.innerHTML='';
+  const loading=document.getElementById('dfLoading');
+  const eggsOn=(typeof easterEggs==='undefined')||easterEggs;
+  const totalDelay=eggsOn?10600:500;
+  if(eggsOn){
+    loading.style.display='flex';
+    let i=0;const interval=10000/DAY_PHRASES.length;const phraseEl=document.getElementById('dfPhrase');
+    function nextPhrase(){
+      if(i<DAY_PHRASES.length){
+        phraseEl.style.animation='none';void phraseEl.offsetWidth;
+        phraseEl.style.animation='fadeUp .5s ease forwards';
+        phraseEl.textContent=DAY_PHRASES[i++];
+        dayFinderTimer=setTimeout(nextPhrase,interval);
+      }
+    }
+    nextPhrase();
+  }else{
+    loading.style.display='none';
+  }
+  setTimeout(()=>{
+    loading.style.display='none';
+    const date=new Date(year,month-1,day);
+    const prev=new Date(date);prev.setDate(prev.getDate()-1);
+    const next=new Date(date);next.setDate(next.getDate()+1);
+    dfResult.innerHTML=`<div class='reveal'>
+      <div class='day-result-box'>
+        <div class='day-date-lbl'>${fmtShort(date)}</div>
+        <div class='day-big'>${WEEKDAYS[date.getDay()]}</div>
+      </div>
+      <div class='neighbors'>
+        <div class='nbr'><div class='nbr-lbl'>⬅ Day Before</div><div class='nbr-day'>${WEEKDAYS[prev.getDay()]}</div><div class='nbr-date'>${fmtShort(prev)}</div></div>
+        <div class='nbr'><div class='nbr-lbl'>Day After ➡</div><div class='nbr-day'>${WEEKDAYS[next.getDay()]}</div><div class='nbr-date'>${fmtShort(next)}</div></div>
+      </div>
+      ${eggsOn?"<div class='iq-box'>🧠 <strong>YOUR IQ IS GREATER THAN 99.9999999% OF ALL HUMANITY</strong> 🎉</div>":''}
+      <button class='btn btn-secondary' style='width:100%' onclick='resetDayFinder()'>↩ Try Another Date</button>
+    </div>`;
+  },totalDelay);
+}
+function resetDayFinder(){
+  clearTimeout(dayFinderTimer);
+  dfForm.style.display='block';dfDay.value='';dfMonth.value='';dfYear.value='';
+  dfResult.innerHTML='';dfHelp.style.display='none';
+}
+
+/* ═══════════════════════ PASSWORD ═══════════════════════ */
+const PW_VERDICTS=[
+  {label:'—',color:'#7A839E',emoji:'🤔',bars:0},
+  {label:'Pathetic',color:'#e05a5a',emoji:'💀',bars:1},
+  {label:'Very Weak',color:'#e05a5a',emoji:'😬',bars:1},
+  {label:'Weak',color:'#e07040',emoji:'😅',bars:2},
+  {label:'Fair',color:'#e0944a',emoji:'🤷',bars:3},
+  {label:'Decent',color:'#d4c843',emoji:'😐',bars:3},
+  {label:'Strong',color:'#4ade80',emoji:'💪',bars:4},
+  {label:'Very Strong',color:'#4ade80',emoji:'🛡️',bars:4},
+  {label:'BEAST MODE',color:'#a78bfa',emoji:'🔥',bars:5}
+];
+const PW_TIPS=['Start typing to analyse your password.','Extremely weak. Even a child could guess it.','Very weak. Add uppercase, numbers and symbols.','Weak. Keep going — more variety needed.','Fair. Getting better, but not safe enough yet.','Good. Add a few more characters to make it solid.','Strong! Well above average.','Very strong. Hackers will need years for this.','Beast mode 🔥 This password is basically uncrackable.'];
+let pwVisible=false;
+function renderPasswordChecker(){
+  pwVisible=false;
+  appEl.innerHTML=`<div class='page-wrap'>
+    <div class='back-row'><button class='back-btn' onclick="go('apps')">← Apps</button></div>
+    <div class='inner-card'>
+      <h2>🔐 Password Strength</h2>
+      <p class='subtitle'>Checked locally — nothing is stored or sent anywhere. 🛡️</p>
+      <div class='pw-wrap'>
+        <input class='ks-input' id='pwIn' type='password' placeholder='Enter your password...' oninput='evalPw(this.value)' autocomplete='off' spellcheck='false' style='padding-right:50px;letter-spacing:2px;'>
+        <button class='eye-btn' onclick='togglePwEye()' id='eyeBtn'>👁️</button>
+      </div>
+      <div class='bar-row'><div class='bar-seg' id='pb1'></div><div class='bar-seg' id='pb2'></div><div class='bar-seg' id='pb3'></div><div class='bar-seg' id='pb4'></div><div class='bar-seg' id='pb5'></div></div>
+      <div class='verdict-row'>
+        <div>
+          <div class='verdict-lbl' id='pwVerdict' style='color:var(--muted)'>—</div>
+          <div class='score-chip'>Score: <span class='score-num' id='pwScore'>0</span> / 100</div>
+        </div>
+        <div class='verdict-emoji' id='pwEmoji'>🤔</div>
+      </div>
+      <div class='pw-criteria'>
+        <div class='criterion' id='pc-len'><div class='crit-dot'></div>At least 8 characters</div>
+        <div class='criterion' id='pc-upper'><div class='crit-dot'></div>Uppercase letter (A–Z)</div>
+        <div class='criterion' id='pc-lower'><div class='crit-dot'></div>Lowercase letter (a–z)</div>
+        <div class='criterion' id='pc-num'><div class='crit-dot'></div>Contains a number (0–9)</div>
+        <div class='criterion' id='pc-sym'><div class='crit-dot'></div>Special character (!@#$...)</div>
+        <div class='criterion' id='pc-long'><div class='crit-dot'></div>12+ characters (bonus) ⭐</div>
+      </div>
+      <div class='tip-box' id='pwTip'>Start typing to analyse your password.</div>
+      ${appFooter('passck')}
+    </div>
+  </div>`;
+}
+function togglePwEye(){pwVisible=!pwVisible;pwIn.type=pwVisible?'text':'password';eyeBtn.textContent=pwVisible?'🙈':'👁️';}
+function setCrit(id,on){const el=document.getElementById(id);on?el.classList.add('met'):el.classList.remove('met');}
+function evalPw(val){
+  const hasUpper=/[A-Z]/.test(val),hasLower=/[a-z]/.test(val),hasNum=/[0-9]/.test(val),hasSym=/[^A-Za-z0-9]/.test(val),lenOk=val.length>=8,lenLong=val.length>=12;
+  setCrit('pc-len',lenOk);setCrit('pc-upper',hasUpper);setCrit('pc-lower',hasLower);setCrit('pc-num',hasNum);setCrit('pc-sym',hasSym);setCrit('pc-long',lenLong);
+  let score=0;
+  if(val.length>0){
+    if(lenOk)score+=20;
+    if(hasUpper)score+=15;if(hasLower)score+=15;if(hasNum)score+=20;if(hasSym)score+=20;
+    if(lenLong)score+=10;
+    if(val.length>=16)score=Math.min(score+5,100);
+    // Cap score at 20 if length requirement not met — short passwords can't be strong
+    if(!lenOk) score=Math.min(score,15);
+  }
+  document.getElementById('pwScore').textContent=score;
+  let level=0;
+  if(val.length>0){if(score<=15)level=1;else if(score<=30)level=2;else if(score<=45)level=3;else if(score<=55)level=4;else if(score<=65)level=5;else if(score<=75)level=6;else if(score<=89)level=7;else level=8;}
+  const v=PW_VERDICTS[level];
+  document.getElementById('pwVerdict').textContent=v.label;
+  document.getElementById('pwVerdict').style.color=v.color;
+  document.getElementById('pwEmoji').textContent=v.emoji;
+  document.getElementById('pwScore').style.color=v.color;
+  document.getElementById('pwTip').textContent=PW_TIPS[level];
+  const barColors=['#e05a5a','#e05a5a','#e07040','#e0944a','#d4c843','#4ade80','#4ade80','#a78bfa'];
+  for(let i=1;i<=5;i++){const seg=document.getElementById('pb'+i);seg.style.background=i<=v.bars?(barColors[level-1]||'#1e1e2e'):'var(--surface2)';}
+}
+
+/* ═══════════════════════ NUMBER BASE CONVERTER ═══════════════════════ */
+function renderBaseConv(){
+  appEl.innerHTML=`<div class='page-wrap'>
+    <div class='back-row'><button class='back-btn' onclick="go('apps')">← Apps</button></div>
+    <div class='inner-card'>
+      <h2>💻 Number Base Converter</h2>
+      <p class='subtitle'>Convert instantly between Binary, Decimal, Octal and Hexadecimal.</p>
+      <label class='field-label'>Input Value</label>
+      <input class='ks-input' id='bcInput' placeholder='Enter a number...' oninput='doBaseConv()'>
+      <div class='mt'><label class='field-label'>Input Base</label>
+      <div style='display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:10px'>
+        <button class='btn btn-primary' id='bb10' onclick='setBBase(10)'>Dec</button>
+        <button class='btn btn-secondary' id='bb2' onclick='setBBase(2)'>Bin</button>
+        <button class='btn btn-secondary' id='bb8' onclick='setBBase(8)'>Oct</button>
+        <button class='btn btn-secondary' id='bb16' onclick='setBBase(16)'>Hex</button>
+      </div></div>
+      <div class='helper-txt' id='bcHelp'>Invalid number for the selected base.</div>
+      <div id='bcResult'></div>
+      ${appFooter('baseconv')}
+    </div>
+  </div>`;
+  window._bcBase=10;
+}
+function setBBase(b){
+  window._bcBase=b;
+  [2,8,10,16].forEach(n=>{const el=document.getElementById('bb'+n);if(el)el.className=n===b?'btn btn-primary':'btn btn-secondary';});
+  doBaseConv();
+}
+function doBaseConv(){
+  const raw=document.getElementById('bcInput').value.trim();
+  const helpEl=document.getElementById('bcHelp');const resEl=document.getElementById('bcResult');
+  helpEl.style.display='none';
+  if(!raw){resEl.innerHTML='';return;}
+  const dec=parseInt(raw,window._bcBase);
+  if(isNaN(dec)||dec<0){helpEl.style.display='block';resEl.innerHTML='';return;}
+  resEl.innerHTML="<div class='result-box reveal'><table class='who-table'><tr><th>Base</th><th>Value</th></tr><tr><td>Decimal (10)</td><td><strong>"+dec.toString(10)+"</strong></td></tr><tr><td>Binary (2)</td><td><strong>"+dec.toString(2)+"</strong></td></tr><tr><td>Octal (8)</td><td><strong>"+dec.toString(8)+"</strong></td></tr><tr><td>Hexadecimal (16)</td><td><strong>"+dec.toString(16).toUpperCase()+"</strong></td></tr></table></div>";
+}
+
+/* ═══════════════════════ WORD & CHARACTER COUNTER ═══════════════════════ */
+function renderWordCount(){
+  appEl.innerHTML=`<div class='page-wrap'>
+    <div class='back-row'><button class='back-btn' onclick="go('apps')">← Apps</button></div>
+    <div class='inner-card'>
+      <h2>📝 Word & Character Counter</h2>
+      <p class='subtitle'>Paste or type any text to instantly analyse it.</p>
+      <label class='field-label'>Your Text</label>
+      <textarea class='ks-input' id='wcText' rows='7' placeholder='Start typing or paste text here...' oninput='doWordCount()' style='resize:vertical;line-height:1.6'></textarea>
+      <div id='wcResult'></div>
+      ${appFooter('wordcount')}
+    </div>
+  </div>`;
+}
+function doWordCount(){
+  const t=document.getElementById('wcText').value;
+  const res=document.getElementById('wcResult');
+  if(!t.trim()){res.innerHTML='';return;}
+  const words=t.trim().split(/\s+/).filter(w=>w.length>0).length;
+  const chars=t.length;
+  const charsNoSpace=t.replace(/\s/g,'').length;
+  const sentences=t.split(/[.!?]+/).filter(s=>s.trim().length>0).length;
+  const paragraphs=t.split(/\n+/).filter(p=>p.trim().length>0).length;
+  const readMins=Math.ceil(words/200);
+  const freq={};
+  t.toLowerCase().replace(/[^a-z\s]/g,'').split(/\s+/).filter(w=>w.length>2).forEach(w=>{freq[w]=(freq[w]||0)+1;});
+  const topWords=Object.entries(freq).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([w,c])=>"<span class='tag nm' style='margin:2px'>"+w+" ("+c+")</span>").join(' ');
+  res.innerHTML="<div class='result-box reveal'><table class='who-table'><tr><td>Words</td><td><strong style='color:var(--accent)'>"+words.toLocaleString()+"</strong></td></tr><tr><td>Characters</td><td><strong>"+chars.toLocaleString()+"</strong></td></tr><tr><td>No-space Chars</td><td><strong>"+charsNoSpace.toLocaleString()+"</strong></td></tr><tr><td>Sentences</td><td><strong>"+sentences+"</strong></td></tr><tr><td>Paragraphs</td><td><strong>"+paragraphs+"</strong></td></tr><tr><td>Reading Time</td><td><strong>~"+readMins+" min</strong></td></tr></table>"+(topWords?"<div style='margin-top:12px'><div class='field-label' style='margin-bottom:6px'>Top Words</div>"+topWords+"</div>":"")+"</div>";
+}
+
+/* ═══════════════════════ EMI CALCULATOR ═══════════════════════ */
+function renderEmi(){
+  appEl.innerHTML=`<div class='page-wrap'>
+    <div class='back-row'><button class='back-btn' onclick="go('apps')">← Apps</button></div>
+    <div class='inner-card'>
+      <h2>💸 EMI / Loan Calculator</h2>
+      <p class='subtitle'>Calculate your monthly EMI, total interest and total payable.</p>
+      <label class='field-label'>Loan Amount</label>
+      <input class='ks-input' id='emiPrincipal' placeholder='e.g. 500000' type='number' min='1'>
+      <div class='mt'><label class='field-label'>Annual Interest Rate (%)</label>
+      <input class='ks-input' id='emiRate' placeholder='e.g. 8.5' type='number' step='0.1'></div>
+      <div class='mt'><label class='field-label'>Loan Duration</label>
+      <div class='grid-2'>
+        <input class='ks-input' id='emiTenure' placeholder='e.g. 5' type='number' min='1'>
+        <select class='ks-select' id='emiUnit'><option value='y'>Years</option><option value='m'>Months</option></select>
+      </div></div>
+      <div class='helper-txt' id='emiHelp'>Please fill in all fields correctly.</div>
+      <div class='mt'><button class='btn btn-primary' onclick='calcEmi()'>Calculate EMI</button></div>
+      <div id='emiResult'></div>
+      ${appFooter('emi')}
+    </div>
+  </div>`;
+}
+function calcEmi(){
+  const P=parseFloat(document.getElementById('emiPrincipal').value);
+  const annualR=parseFloat(document.getElementById('emiRate').value);
+  let months=parseInt(document.getElementById('emiTenure').value);
+  const unit=document.getElementById('emiUnit').value;
+  const helpEl=document.getElementById('emiHelp');
+  if(unit==='y')months*=12;
+  if(!P||!annualR||!months||P<=0||annualR<=0||months<=0){helpEl.style.display='block';return;}
+  helpEl.style.display='none';
+  const r=annualR/(12*100);
+  const emi=P*r*Math.pow(1+r,months)/(Math.pow(1+r,months)-1);
+  const total=emi*months;const interest=total-P;
+  const fmt=n=>n.toLocaleString('en-IN',{maximumFractionDigits:2});
+  document.getElementById('emiResult').innerHTML="<div class='result-box reveal'><table class='who-table'><tr><td>Monthly EMI</td><td><strong style='color:var(--accent);font-size:1.2rem'>"+fmt(emi)+"</strong></td></tr><tr><td>Principal</td><td><strong>"+fmt(P)+"</strong></td></tr><tr><td>Total Interest</td><td><strong style='color:#f87171'>"+fmt(interest)+"</strong></td></tr><tr><td>Total Payable</td><td><strong>"+fmt(total)+"</strong></td></tr><tr><td>Duration</td><td><strong>"+months+" months</strong></td></tr></table></div>";
+}
+
+/* ═══════════════════════ UNIT CONVERTER ═══════════════════════ */
+const UNIT_CATS={
+  'Temperature':{emoji:'🌡️',units:['Celsius','Fahrenheit','Kelvin'],convert:(v,from,to)=>{let c=from==='Fahrenheit'?(v-32)*5/9:from==='Kelvin'?v-273.15:v;return to==='Fahrenheit'?c*9/5+32:to==='Kelvin'?c+273.15:c;}},
+  'Length':{emoji:'📏',units:['Metre','Kilometre','Mile','Foot','Inch','Centimetre'],toM:{Metre:1,Kilometre:1000,Mile:1609.344,Foot:0.3048,Inch:0.0254,Centimetre:0.01},convert(v,from,to){return v*this.toM[from]/this.toM[to];}},
+  'Weight':{emoji:'⚖️',units:['Kilogram','Gram','Pound','Ounce','Tonne'],toKg:{Kilogram:1,Gram:0.001,Pound:0.453592,Ounce:0.0283495,Tonne:1000},convert(v,from,to){return v*this.toKg[from]/this.toKg[to];}},
+  'Speed':{emoji:'💨',units:['km/h','m/s','mph','knot'],toKmh:{'km/h':1,'m/s':3.6,'mph':1.60934,'knot':1.852},convert(v,from,to){return v*this.toKmh[from]/this.toKmh[to];}}
+};
+function renderUnitConv(){
+  appEl.innerHTML=`<div class='page-wrap'>
+    <div class='back-row'><button class='back-btn' onclick="go('apps')">← Apps</button></div>
+    <div class='inner-card'>
+      <h2>🌡️ Unit Converter</h2>
+      <p class='subtitle'>Convert between temperature, length, weight and speed units.</p>
+      <label class='field-label'>Category</label>
+      <select class='ks-select' id='ucCat' onchange='buildUcUnits()'>${Object.keys({Temperature:1,Length:1,Weight:1,Speed:1}).map(k=>"<option>"+k+"</option>").join('')}</select>
+      <div class='grid-2 mt'>
+        <div><label class='field-label'>From</label><select class='ks-select' id='ucFrom' onchange='doUnitConv()'></select></div>
+        <div><label class='field-label'>To</label><select class='ks-select' id='ucTo' onchange='doUnitConv()'></select></div>
+      </div>
+      <div class='mt'><label class='field-label'>Value</label>
+      <input class='ks-input' id='ucVal' placeholder='Enter value...' type='number' oninput='doUnitConv()'></div>
+      <div id='ucResult'></div>
+      ${appFooter('unitconv')}
+    </div>
+  </div>`;
+  buildUcUnits();
+}
+function buildUcUnits(){
+  const cat=UNIT_CATS[document.getElementById('ucCat').value];
+  document.getElementById('ucFrom').innerHTML=cat.units.map(u=>"<option>"+u+"</option>").join('');
+  document.getElementById('ucTo').innerHTML=cat.units.map((u,i)=>"<option"+(i===1?' selected':'')+">"+u+"</option>").join('');
+  doUnitConv();
+}
+function doUnitConv(){
+  const v=parseFloat(document.getElementById('ucVal').value);
+  const res=document.getElementById('ucResult');
+  if(isNaN(v)){res.innerHTML='';return;}
+  const from=document.getElementById('ucFrom').value,to=document.getElementById('ucTo').value;
+  const result=UNIT_CATS[document.getElementById('ucCat').value].convert(v,from,to);
+  res.innerHTML="<div class='result-box reveal'><p>"+v+" "+from+" =</p><strong>"+parseFloat(result.toPrecision(8)).toLocaleString()+" "+to+"</strong></div>";
+}
+
+/* ═══════════════════════ STOPWATCH & TIMER ═══════════════════════ */
+let swRunning=false,swStart=0,swElapsed=0,swInterval=null,swLapsList=[];
+let cdRunning=false,cdEnd=0,cdInterval=null,cdTotal=0,cdFinished=false;
+let cdLastTotal=0;                 // remembers last-set duration, for the pill's Restart action
+let cdPillHidden=false,swPillHidden=false; // "discard the pill, keep it running" flags
+let cdAlarmPlaying=false,cdAlarmInterval=null,ksAudioCtx=null;
+let curPage='home';
+var communityUnsub=null; // active Firestore live-feed unsubscribe fn, if on the Community page (added)
+function renderTimer(){
+  appEl.innerHTML=`<div class='page-wrap'>
+    <div class='back-row'><button class='back-btn' onclick="go('apps')">← Apps</button></div>
+    <div class='inner-card'>
+      <h2>⏱️ Stopwatch & Timer</h2>
+      <p class='subtitle'>Pick which one you need.</p>
+      <div class='clock-picker-grid'>
+        <div class='clock-picker-card' onclick="go('stopwatch')">
+          <span class='icon'>⏱️</span>
+          <div><strong>Stopwatch</strong><span>Count up from zero, with lap tracking</span></div>
+        </div>
+        <div class='clock-picker-card' onclick="go('countdown')">
+          <span class='icon'>⏲️</span>
+          <div><strong>Timer</strong><span>Count down from a set time</span></div>
+        </div>
+      </div>
+      ${appFooter('timer')}
+    </div>
+  </div>`;
+}
+
+/* ── Shared dial-drawing helper ── */
+function drawClockTicks(canvas,progress,showNeedle,accentColor){
+  const ctx=canvas.getContext('2d');
+  const w=canvas.width,h=canvas.height,cx=w/2,cy=h/2,r=w/2-6;
+  ctx.clearRect(0,0,w,h);
+  for(let i=0;i<60;i++){
+    const a=(i/60)*Math.PI*2-Math.PI/2;
+    const big=i%5===0;
+    const r1=r-(big?14:8),r2=r;
+    ctx.beginPath();
+    ctx.moveTo(cx+Math.cos(a)*r1,cy+Math.sin(a)*r1);
+    ctx.lineTo(cx+Math.cos(a)*r2,cy+Math.sin(a)*r2);
+    ctx.strokeStyle=big?accentColor:'rgba(127,127,127,0.35)';
+    ctx.lineWidth=big?2.5:1.5;
+    ctx.stroke();
+  }
+  if(showNeedle){
+    const a=progress*Math.PI*2-Math.PI/2;
+    ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+Math.cos(a)*(r-18),cy+Math.sin(a)*(r-18));
+    ctx.strokeStyle=accentColor;ctx.lineWidth=3;ctx.lineCap='round';ctx.stroke();
+    ctx.beginPath();ctx.arc(cx,cy,5,0,Math.PI*2);ctx.fillStyle=accentColor;ctx.fill();
+  }
+}
+
+/* ═══════════════════════ STOPWATCH (Samsung-style, added) ═══════════════════════ */
+function renderStopwatch(){
+  var hasSession=swRunning||swElapsed>0;
+  if(!hasSession){ swStart=0;swElapsed=0;swLapsList=[]; }
+  clearInterval(swInterval);
+  appEl.innerHTML=`<div class='page-wrap'>
+    <div class='back-row'><button class='back-btn' onclick="go('timer')">← Stopwatch & Timer</button></div>
+    <div class='inner-card' style='text-align:center'>
+      <h2>⏱️ Stopwatch</h2>
+      <div class='clock-dial-wrap'>
+        <canvas class='clock-dial-canvas' id='swCanvas' width='260' height='260'></canvas>
+        <div class='clock-readout'><div class='big' id='swDisplay'>${swFmt(swElapsed)}</div></div>
+      </div>
+      <div class='clock-btn-row three'>
+        <button class='clock-circle-btn neutral' onclick='swCancel()'>Cancel</button>
+        <button class='clock-circle-btn neutral' onclick='swLap()'>Lap</button>
+        <button class='clock-circle-btn ${swRunning?'danger':'primary'}' id='swStartBtn' onclick='swToggle()'>${swRunning?'Pause':(swElapsed>0?'Resume':'Start')}</button>
+      </div>
+      <div id='swLaps' class='clock-lap-list'></div>
+      ${appFooter('stopwatch')}
+    </div>
+  </div>`;
+  const accent=getComputedStyle(document.documentElement).getPropertyValue('--accent').trim()||'#F5A623';
+  drawClockTicks(document.getElementById('swCanvas'),0,true,accent);
+  renderSwLaps();
+  if(swRunning){
+    swInterval=setInterval(()=>{
+      const total=swElapsed+Date.now()-swStart;
+      const disp=document.getElementById('swDisplay');if(disp)disp.textContent=swFmt(total);
+      const canvas=document.getElementById('swCanvas');
+      if(canvas)drawClockTicks(canvas,(total%60000)/60000,true,accent);
+    },50);
+  }
+}
+function renderSwLaps(){
+  const laps=document.getElementById('swLaps');
+  if(!laps)return;
+  laps.innerHTML=swLapsList.map((l,i)=>"<div style='display:flex;justify-content:space-between;padding:8px 12px;border-bottom:1px solid var(--border);font-size:13px'><span style='color:var(--muted)'>Lap "+(i+1)+"</span><strong>"+swFmt(l)+"</strong></div>").reverse().join('');
+}
+function swFmt(ms){const m=Math.floor(ms/60000),s=Math.floor((ms%60000)/1000),cs=Math.floor((ms%1000)/10);return String(m).padStart(2,'0')+':'+String(s).padStart(2,'0')+'.'+String(cs).padStart(2,'0');}
+function swToggle(){
+  const btn=document.getElementById('swStartBtn');
+  const accent=getComputedStyle(document.documentElement).getPropertyValue('--accent').trim()||'#F5A623';
+  if(swRunning){
+    swElapsed+=Date.now()-swStart;clearInterval(swInterval);swRunning=false;
+    btn.textContent='Resume';btn.className='clock-circle-btn primary';
+  }else{
+    swPillHidden=false;
+    swStart=Date.now();swRunning=true;
+    swInterval=setInterval(()=>{
+      const total=swElapsed+Date.now()-swStart;
+      const disp=document.getElementById('swDisplay');if(disp)disp.textContent=swFmt(total);
+      const canvas=document.getElementById('swCanvas');
+      if(canvas)drawClockTicks(canvas,(total%60000)/60000,true,accent);
+    },50);
+    btn.textContent='Pause';btn.className='clock-circle-btn danger';
+  }
+}
+function swCancel(){
+  clearInterval(swInterval);swRunning=false;swElapsed=0;swLapsList=[];swPillHidden=false;
+  const disp=document.getElementById('swDisplay');if(disp)disp.textContent='00:00.00';
+  const btn=document.getElementById('swStartBtn');if(btn){btn.textContent='Start';btn.className='clock-circle-btn primary';}
+  const laps=document.getElementById('swLaps');if(laps)laps.innerHTML='';
+  const canvas=document.getElementById('swCanvas');
+  if(canvas)drawClockTicks(canvas,0,true,getComputedStyle(document.documentElement).getPropertyValue('--accent').trim()||'#F5A623');
+  updateTimerPill();
+}
+function swLap(){
+  if(!swRunning&&swElapsed===0)return;
+  swLapsList.push(swElapsed+(swRunning?Date.now()-swStart:0));
+  renderSwLaps();
+}
+
+/* ═══════════════════════ COUNTDOWN TIMER (Samsung-style, added) ═══════════════════════ */
+function renderCountdown(){
+  var justFinished=cdFinished;cdFinished=false;
+  var hasSession=cdRunning||cdTotal>0;
+  clearInterval(cdInterval);
+  appEl.innerHTML=`<div class='page-wrap'>
+    <div class='back-row'><button class='back-btn' onclick="go('timer')">← Stopwatch & Timer</button></div>
+    <div class='inner-card' style='text-align:center'>
+      <h2>⏲️ Timer</h2>
+      <div id='cdSetupView'>
+        <div class='clock-setup-grid'>
+          <div><label>Hours</label><input type='number' id='cdH' min='0' max='99' placeholder='00'></div>
+          <div><label>Minutes</label><input type='number' id='cdM' min='0' max='59' placeholder='00'></div>
+          <div><label>Seconds</label><input type='number' id='cdS' min='0' max='59' placeholder='00'></div>
+        </div>
+        <div class='clock-preset-row'>
+          <div class='clock-preset-chip' onclick='cdPreset(0,10,0)'>00:10:00</div>
+          <div class='clock-preset-chip' onclick='cdPreset(0,15,0)'>00:15:00</div>
+          <div class='clock-preset-chip' onclick='cdPreset(0,30,0)'>00:30:00</div>
+        </div>
+        <div class='clock-btn-row' style='margin-top:0'>
+          <button class='clock-circle-btn primary' onclick='cdStart()'>Start</button>
+        </div>
+      </div>
+      <div id='cdRunView' style='display:none'>
+        <div class='clock-dial-wrap'>
+          <canvas class='clock-dial-canvas' id='cdCanvas' width='260' height='260'></canvas>
+          <div class='clock-readout'>
+            <div class='small' id='cdRemainLabel'></div>
+            <div class='big' id='cdDisplay'>00:00:00</div>
+          </div>
+        </div>
+        <div class='clock-btn-row'>
+          <button class='clock-circle-btn neutral' onclick='cdReset()'>Cancel</button>
+          <button class='clock-circle-btn danger' id='cdPauseBtn' onclick='cdToggle()'>Pause</button>
+        </div>
+      </div>
+      <div id='cdAlert'></div>
+      ${appFooter('countdown')}
+    </div>
+  </div>`;
+  if(hasSession){
+    document.getElementById('cdSetupView').style.display='none';
+    document.getElementById('cdRunView').style.display='block';
+    const accent=getComputedStyle(document.documentElement).getPropertyValue('--accent').trim()||'#F5A623';
+    if(cdRunning){
+      document.getElementById('cdPauseBtn').textContent='Pause';document.getElementById('cdPauseBtn').className='clock-circle-btn danger';
+      cdTick();
+      cdInterval=setInterval(cdTick,300);
+    }else{
+      document.getElementById('cdPauseBtn').textContent='Resume';document.getElementById('cdPauseBtn').className='clock-circle-btn primary';
+      const disp=document.getElementById('cdDisplay');if(disp)disp.textContent=cdFmt(cdTotal);
+      const lbl=document.getElementById('cdRemainLabel');if(lbl)lbl.textContent=cdHumanRemain(cdTotal);
+      const canvas=document.getElementById('cdCanvas');if(canvas)drawClockTicks(canvas,0,false,accent);
+    }
+  }else if(justFinished){
+    document.getElementById('cdAlert').innerHTML="<div class='result-box reveal' style='text-align:center;margin-top:14px'>⏰ <strong>Time is up!</strong> 🎉</div>";
+  }
+}
+function cdPreset(h,m,s){
+  document.getElementById('cdH').value=h||'';
+  document.getElementById('cdM').value=m||'';
+  document.getElementById('cdS').value=s||'';
+}
+function cdFmt(s){const h=Math.floor(s/3600),m=Math.floor((s%3600)/60),sec=s%60;return String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')+':'+String(sec).padStart(2,'0');}
+function cdHumanRemain(s){const h=Math.floor(s/3600),m=Math.floor((s%3600)/60);if(h>0)return h+' h '+m+' m';return m+' m '+(s%60)+' s';}
+function cdStart(){
+  const total=(parseInt(document.getElementById('cdH').value)||0)*3600+(parseInt(document.getElementById('cdM').value)||0)*60+(parseInt(document.getElementById('cdS').value)||0);
+  if(!total)return;
+  stopCdAlarm();cdFinished=false;cdPillHidden=false;
+  cdTotal=total;cdLastTotal=total;cdEnd=Date.now()+total*1000;cdRunning=true;
+  document.getElementById('cdSetupView').style.display='none';
+  document.getElementById('cdRunView').style.display='block';
+  document.getElementById('cdPauseBtn').textContent='Pause';document.getElementById('cdPauseBtn').className='clock-circle-btn danger';
+  cdTick();
+  cdInterval=setInterval(cdTick,300);
+}
+function cdTick(){
+  const accent=getComputedStyle(document.documentElement).getPropertyValue('--accent').trim()||'#F5A623';
+  const rem=Math.max(0,Math.round((cdEnd-Date.now())/1000));
+  const disp=document.getElementById('cdDisplay');if(disp)disp.textContent=cdFmt(rem);
+  const lbl=document.getElementById('cdRemainLabel');if(lbl)lbl.textContent=cdHumanRemain(rem);
+  const canvas=document.getElementById('cdCanvas');
+  if(canvas)drawClockTicks(canvas,cdTotal?1-(rem/cdTotal):0,false,accent);
+  if(rem===0){
+    clearInterval(cdInterval);cdRunning=false;cdTotal=0;
+    cdMarkFinished();
+    const alertEl=document.getElementById('cdAlert');if(alertEl)alertEl.innerHTML="<div class='result-box reveal' style='text-align:center;margin-top:14px'>⏰ <strong>Time is up!</strong> 🎉</div>";
+  }
+}
+function cdToggle(){
+  const btn=document.getElementById('cdPauseBtn');
+  if(cdRunning){
+    clearInterval(cdInterval);cdRunning=false;
+    cdTotal=Math.max(0,Math.round((cdEnd-Date.now())/1000));
+    btn.textContent='Resume';btn.className='clock-circle-btn primary';
+  }else{
+    cdEnd=Date.now()+cdTotal*1000;cdRunning=true;
+    btn.textContent='Pause';btn.className='clock-circle-btn danger';
+    cdTick();cdInterval=setInterval(cdTick,300);
+  }
+}
+function cdReset(){
+  clearInterval(cdInterval);cdRunning=false;cdEnd=0;cdTotal=0;
+  stopCdAlarm();cdFinished=false;cdPillHidden=false;cdLastTotal=0;
+  document.getElementById('cdSetupView').style.display='block';
+  document.getElementById('cdRunView').style.display='none';
+  document.getElementById('cdAlert').innerHTML='';
+  ['cdH','cdM','cdS'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  updateTimerPill();
+}
+
+/* ═══════════════════════ RANDOM DECISION MAKER ═══════════════════════ */
+let rdSpinning=false;
+function renderDecision(){
+  rdSpinning=false;
+  appEl.innerHTML=`<div class='page-wrap'>
+    <div class='back-row'><button class='back-btn' onclick="go('apps')">← Apps</button></div>
+    <div class='inner-card'>
+      <h2>🎲 Random Decision Maker</h2>
+      <p class='subtitle'>Can't decide? Enter your options and let fate choose! 🌀</p>
+      <label class='field-label'>Your Options <span style='color:var(--sub)'>(one per line, min 2)</span></label>
+      <textarea class='ks-input' id='rdOptions' rows='6' placeholder='Pizza&#10;Burger&#10;Sushi&#10;Pasta' style='resize:vertical;line-height:1.8'></textarea>
+      <div class='helper-txt' id='rdHelp'>Enter at least 2 options.</div>
+      <div class='mt'><button class='btn btn-primary' id='rdBtn' onclick='spinDecision()'>🎲 Spin & Decide!</button></div>
+      <div style='display:flex;justify-content:center;margin:20px 0'>
+        <div style='position:relative'>
+          <canvas id='rdWheel' width='260' height='260' style='border-radius:50%;display:none'></canvas>
+          <div id='rdPointer' style='display:none;position:absolute;top:-16px;left:50%;transform:translateX(-50%);font-size:2rem'>▼</div>
+        </div>
+      </div>
+      <div id='rdResult'></div>
+      ${appFooter('decision')}
+    </div>
+  </div>`;
+}
+function spinDecision(){
+  const opts=document.getElementById('rdOptions').value.split('\n').map(o=>o.trim()).filter(o=>o.length>0);
+  const helpEl=document.getElementById('rdHelp');
+  if(opts.length<2){helpEl.style.display='block';return;}
+  helpEl.style.display='none';if(rdSpinning)return;
+  rdSpinning=true;const rdBtn=document.getElementById('rdBtn');rdBtn.disabled=true;
+  document.getElementById('rdResult').innerHTML='';
+  const canvas=document.getElementById('rdWheel');canvas.style.display='block';document.getElementById('rdPointer').style.display='block';
+  const ctx=canvas.getContext('2d'),cx=130,cy=130,radius=118;
+  const colors=['#F5A623','#3D52D5','#4ade80','#f87171','#a78bfa','#60a5fa','#fb923c','#34d399','#e879f9','#facc15','#38bdf8','#f472b6'];
+  const arc=2*Math.PI/opts.length;
+  const targetIdx=Math.floor(Math.random()*opts.length);
+  const targetAngle=2*Math.PI*5+(3*Math.PI/2-targetIdx*arc-arc/2);
+  const duration=3500,startTime=Date.now();
+  function easeOut(t){return 1-Math.pow(1-t,4);}
+  function draw(a){
+    ctx.clearRect(0,0,260,260);
+    opts.forEach((opt,i)=>{
+      ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,radius,i*arc+a,(i+1)*arc+a);ctx.closePath();
+      ctx.fillStyle=colors[i%colors.length];ctx.fill();ctx.strokeStyle='rgba(0,0,0,0.15)';ctx.lineWidth=1.5;ctx.stroke();
+      ctx.save();ctx.translate(cx,cy);ctx.rotate(i*arc+arc/2+a);ctx.textAlign='right';ctx.fillStyle='#fff';
+      ctx.font='bold 12px Syne,sans-serif';ctx.shadowColor='rgba(0,0,0,.5)';ctx.shadowBlur=4;
+      ctx.fillText(opt.length>11?opt.slice(0,11)+'...':opt,radius-8,5);ctx.restore();
+    });
+    ctx.beginPath();ctx.arc(cx,cy,20,0,Math.PI*2);ctx.fillStyle='#0A0C14';ctx.fill();ctx.strokeStyle='rgba(255,255,255,0.1)';ctx.lineWidth=2;ctx.stroke();
+  }
+  function animate(){
+    const t=Math.min((Date.now()-startTime)/duration,1);draw(easeOut(t)*targetAngle);
+    if(t<1){requestAnimationFrame(animate);}
+    else{
+      rdSpinning=false;rdBtn.disabled=false;
+      document.getElementById('rdResult').innerHTML="<div class='result-box reveal' style='text-align:center'><div style='font-size:2.5rem;margin-bottom:8px'>🎉</div><p style='color:var(--muted)'>The decision is...</p><strong style='font-size:1.6rem;color:var(--accent)'>"+opts[targetIdx]+"</strong><p style='margin-top:8px;font-size:13px;color:var(--muted)'>Fate has spoken! 🌟</p></div>";
+    }
+  }
+  animate();
+}
+
+/* ═══════════════════════════════════════
+   CALCULATOR HUB
+═══════════════════════════════════════ */
+function renderCalcHub(){
+  appEl.innerHTML=`<div class='page-wrap'>
+    <div class='back-row'><button class='back-btn' onclick="go('apps')">← Apps</button></div>
+    <div class='inner-card'>
+      <h2>🧮 Calculator Hub</h2>
+      <p class='subtitle'>Every calculator you'll ever need — all in one place.</p>
+      <div style='display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px' id='calcTabs'>
+        <button class='calc-tab active' onclick='switchCalc("simple",this)'>Simple</button>
+        <button class='calc-tab' onclick='switchCalc("scientific",this)'>Scientific</button>
+        <button class='calc-tab' onclick='switchCalc("engineering",this)'>Engineering</button>
+        <button class='calc-tab' onclick='switchCalc("percentage",this)'>Percentage</button>
+        <button class='calc-tab' onclick='switchCalc("financial",this)'>Financial</button>
+      </div>
+      <div id='calcBody'></div>
+      ${appFooter('calchub')}
+    </div>
+  </div>`;
+  // Inject styles
+  if(!document.getElementById('calcHubStyle')){
+    const s=document.createElement('style');
+    s.id='calcHubStyle';
+    s.textContent=`
+      .calc-tab{
+        position:relative;padding:10px 18px;border-radius:12px;
+        border:1.5px solid var(--border);
+        background:linear-gradient(135deg,var(--surface2),var(--surface));
+        color:var(--muted);cursor:pointer;
+        font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;
+        transition:all .2s cubic-bezier(.4,0,.2,1);
+        box-shadow:0 2px 8px rgba(0,0,0,.3);
+        overflow:hidden;
+      }
+      .calc-tab::after{
+        content:'';position:absolute;inset:0;
+        background:linear-gradient(135deg,rgba(245,166,35,0),rgba(245,166,35,0));
+        transition:background .2s;
+      }
+      .calc-tab:hover{
+        border-color:rgba(245,166,35,0.4);
+        color:var(--text);
+        transform:translateY(-1px);
+        box-shadow:0 4px 16px rgba(0,0,0,.4);
+      }
+      .calc-tab:active{transform:scale(.95) translateY(0);}
+      .calc-tab.active{
+        background:linear-gradient(135deg,#7a3e00,#4a2200);
+        border-color:var(--accent);
+        color:var(--accent);
+        box-shadow:0 0 16px rgba(245,166,35,0.25),0 2px 8px rgba(0,0,0,.4);
+        font-weight:700;
+      }
+      .calc-tab.active::before{
+        content:'';position:absolute;top:0;left:0;right:0;height:2px;
+        background:linear-gradient(90deg,transparent,var(--accent),transparent);
+      }
+      .calc-display{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:16px 20px;margin-bottom:14px;text-align:right;}
+      .calc-expr{font-size:13px;color:var(--muted);min-height:18px;font-family:'Rajdhani',sans-serif;}
+      .calc-val{font-size:2.2rem;font-weight:600;color:var(--text);font-family:'Rajdhani',sans-serif;word-break:break-all;}
+      .calc-grid{display:grid;gap:8px;}
+      .calc-grid-4{grid-template-columns:repeat(4,1fr);}
+      .calc-grid-5{grid-template-columns:repeat(5,1fr);}
+      .cb{padding:16px 8px;border-radius:12px;border:none;font-size:1rem;font-family:'Rajdhani',sans-serif;font-weight:600;cursor:pointer;transition:transform .1s,opacity .2s;}
+      .cb:active{transform:scale(.93);}
+      .cb-num{background:var(--surface2);color:var(--text);}
+      .cb-op{background:#2a1a1a;color:var(--accent);}
+      .cb-fn{background:#1a1a2e;color:#a89fff;font-size:.85rem;}
+      .cb-eq{background:var(--accent);color:#fff;}
+      .cb-clear{background:#2a1020;color:#f87171;}
+      .cb-zero{grid-column:span 2;}
+      .pct-row{display:flex;flex-direction:column;gap:12px;margin-bottom:8px;}
+      .pct-label{font-size:13px;color:var(--muted);margin-bottom:4px;}
+      .pct-result{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px;text-align:center;font-family:'Rajdhani',sans-serif;font-size:1.4rem;color:var(--accent);font-weight:600;min-height:48px;}
+      .fin-row{margin-bottom:12px;}
+    `;
+    document.head.appendChild(s);
+  }
+  switchCalc('simple', document.querySelector('.calc-tab'));
+}
+
+let calcExpr='', calcVal='0', calcNewNum=true;
+
+function switchCalc(mode, btn){
+  document.querySelectorAll('.calc-tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  calcExpr=''; calcVal='0'; calcNewNum=true;
+  const body=document.getElementById('calcBody');
+  if(mode==='simple') body.innerHTML=buildSimpleCalc();
+  else if(mode==='scientific') body.innerHTML=buildSciCalc();
+  else if(mode==='engineering') body.innerHTML=buildEngCalc();
+  else if(mode==='percentage') body.innerHTML=buildPctCalc();
+  else if(mode==='financial') body.innerHTML=buildFinCalc();
+}
+
+function calcDisplay(val,expr){
+  const v=document.getElementById('calcVal');
+  const e=document.getElementById('calcExpr');
+  if(v) v.textContent=val;
+  if(e) e.textContent=expr||'';
+}
+
+function cPress(v){
+  if(v==='C'){calcExpr='';calcVal='0';calcNewNum=true;}
+  else if(v==='⌫'){calcVal=calcVal.length>1?calcVal.slice(0,-1):'0';}
+  else if(v==='='){
+    try{
+      let expr=calcExpr+calcVal;
+      // Replace display symbols
+      expr=expr.replace(/×/g,'*').replace(/÷/g,'/').replace(/\^/g,'**');
+      const result=Function('"use strict";return ('+expr+')')();
+      calcExpr='';
+      calcVal=parseFloat(result.toFixed(10)).toString();
+      calcNewNum=true;
+    }catch{calcVal='Error';calcNewNum=true;}
+  }
+  else if(['+','-','×','÷','%','^'].includes(v)){
+    calcExpr+=calcVal+v;calcVal='0';calcNewNum=true;
+  }
+  else if(v==='+/-'){calcVal=(parseFloat(calcVal)*-1).toString();}
+  else if(v==='.'){if(!calcVal.includes('.'))calcVal+='.'; calcNewNum=false;}
+  else{
+    if(calcNewNum||calcVal==='0'){calcVal=v;calcNewNum=false;}
+    else calcVal+=v;
+  }
+  calcDisplay(calcVal,calcExpr);
+}
+
+function cFn(fn){
+  let n=parseFloat(calcVal);
+  let r;
+  if(fn==='sin') r=Math.sin(n*Math.PI/180);
+  else if(fn==='cos') r=Math.cos(n*Math.PI/180);
+  else if(fn==='tan') r=Math.tan(n*Math.PI/180);
+  else if(fn==='asin') r=Math.asin(n)*180/Math.PI;
+  else if(fn==='acos') r=Math.acos(n)*180/Math.PI;
+  else if(fn==='atan') r=Math.atan(n)*180/Math.PI;
+  else if(fn==='log') r=Math.log10(n);
+  else if(fn==='ln') r=Math.log(n);
+  else if(fn==='sqrt') r=Math.sqrt(n);
+  else if(fn==='cbrt') r=Math.cbrt(n);
+  else if(fn==='x2') r=n*n;
+  else if(fn==='x3') r=n*n*n;
+  else if(fn==='1/x') r=1/n;
+  else if(fn==='n!'){let f=1;for(let i=2;i<=n;i++)f*=i;r=f;}
+  else if(fn==='pi'){calcVal=Math.PI.toString();calcNewNum=true;calcDisplay(calcVal,calcExpr);return;}
+  else if(fn==='e'){calcVal=Math.E.toString();calcNewNum=true;calcDisplay(calcVal,calcExpr);return;}
+  else if(fn==='exp10') r=Math.pow(10,n);
+  else if(fn==='abs') r=Math.abs(n);
+  calcVal=parseFloat(r.toFixed(10)).toString();
+  calcNewNum=true;
+  calcDisplay(calcVal,calcExpr);
+}
+
+function buildSimpleCalc(){
+  return `<div class='calc-display'><div class='calc-expr' id='calcExpr'></div><div class='calc-val' id='calcVal'>0</div></div>
+  <div class='calc-grid calc-grid-4'>
+    <button class='cb cb-clear' onclick="cPress('C')">C</button>
+    <button class='cb cb-fn' onclick="cPress('+/-')">+/-</button>
+    <button class='cb cb-fn' onclick="cPress('%')">%</button>
+    <button class='cb cb-op' onclick="cPress('÷')">÷</button>
+    <button class='cb cb-num' onclick="cPress('7')">7</button>
+    <button class='cb cb-num' onclick="cPress('8')">8</button>
+    <button class='cb cb-num' onclick="cPress('9')">9</button>
+    <button class='cb cb-op' onclick="cPress('×')">×</button>
+    <button class='cb cb-num' onclick="cPress('4')">4</button>
+    <button class='cb cb-num' onclick="cPress('5')">5</button>
+    <button class='cb cb-num' onclick="cPress('6')">6</button>
+    <button class='cb cb-op' onclick="cPress('-')">−</button>
+    <button class='cb cb-num' onclick="cPress('1')">1</button>
+    <button class='cb cb-num' onclick="cPress('2')">2</button>
+    <button class='cb cb-num' onclick="cPress('3')">3</button>
+    <button class='cb cb-op' onclick="cPress('+')">+</button>
+    <button class='cb cb-num cb-zero' onclick="cPress('0')">0</button>
+    <button class='cb cb-num' onclick="cPress('.')">.</button>
+    <button class='cb cb-eq' onclick="cPress('=')">=</button>
+  </div>`;
+}
+
+function buildSciCalc(){
+  return `<div class='calc-display'><div class='calc-expr' id='calcExpr'></div><div class='calc-val' id='calcVal'>0</div></div>
+  <div class='calc-grid calc-grid-5' style='margin-bottom:8px'>
+    <button class='cb cb-fn' onclick="cFn('sin')">sin</button>
+    <button class='cb cb-fn' onclick="cFn('cos')">cos</button>
+    <button class='cb cb-fn' onclick="cFn('tan')">tan</button>
+    <button class='cb cb-fn' onclick="cFn('log')">log</button>
+    <button class='cb cb-fn' onclick="cFn('ln')">ln</button>
+    <button class='cb cb-fn' onclick="cFn('asin')">sin⁻¹</button>
+    <button class='cb cb-fn' onclick="cFn('acos')">cos⁻¹</button>
+    <button class='cb cb-fn' onclick="cFn('atan')">tan⁻¹</button>
+    <button class='cb cb-fn' onclick="cFn('sqrt')">√</button>
+    <button class='cb cb-fn' onclick="cFn('x2')">x²</button>
+    <button class='cb cb-fn' onclick="cFn('x3')">x³</button>
+    <button class='cb cb-fn' onclick="cPress('^')">xʸ</button>
+    <button class='cb cb-fn' onclick="cFn('n!')">n!</button>
+    <button class='cb cb-fn' onclick="cFn('1/x')">1/x</button>
+    <button class='cb cb-fn' onclick="cFn('pi')">π</button>
+  </div>
+  <div class='calc-grid calc-grid-4'>
+    <button class='cb cb-clear' onclick="cPress('C')">C</button>
+    <button class='cb cb-fn' onclick="cPress('⌫')">⌫</button>
+    <button class='cb cb-op' onclick="cPress('%')">%</button>
+    <button class='cb cb-op' onclick="cPress('÷')">÷</button>
+    <button class='cb cb-num' onclick="cPress('7')">7</button>
+    <button class='cb cb-num' onclick="cPress('8')">8</button>
+    <button class='cb cb-num' onclick="cPress('9')">9</button>
+    <button class='cb cb-op' onclick="cPress('×')">×</button>
+    <button class='cb cb-num' onclick="cPress('4')">4</button>
+    <button class='cb cb-num' onclick="cPress('5')">5</button>
+    <button class='cb cb-num' onclick="cPress('6')">6</button>
+    <button class='cb cb-op' onclick="cPress('-')">−</button>
+    <button class='cb cb-num' onclick="cPress('1')">1</button>
+    <button class='cb cb-num' onclick="cPress('2')">2</button>
+    <button class='cb cb-num' onclick="cPress('3')">3</button>
+    <button class='cb cb-op' onclick="cPress('+')">+</button>
+    <button class='cb cb-num cb-zero' onclick="cPress('0')">0</button>
+    <button class='cb cb-num' onclick="cPress('.')">.</button>
+    <button class='cb cb-eq' onclick="cPress('=')">=</button>
+  </div>`;
+}
+
+function buildEngCalc(){
+  return `<div class='calc-display'><div class='calc-expr' id='calcExpr'></div><div class='calc-val' id='calcVal'>0</div></div>
+  <div class='calc-grid calc-grid-5' style='margin-bottom:8px'>
+    <button class='cb cb-fn' onclick="cFn('sin')">sin</button>
+    <button class='cb cb-fn' onclick="cFn('cos')">cos</button>
+    <button class='cb cb-fn' onclick="cFn('tan')">tan</button>
+    <button class='cb cb-fn' onclick="cFn('log')">log</button>
+    <button class='cb cb-fn' onclick="cFn('ln')">ln</button>
+    <button class='cb cb-fn' onclick="cFn('sqrt')">√x</button>
+    <button class='cb cb-fn' onclick="cFn('cbrt')">∛x</button>
+    <button class='cb cb-fn' onclick="cFn('x2')">x²</button>
+    <button class='cb cb-fn' onclick="cPress('^')">xʸ</button>
+    <button class='cb cb-fn' onclick="cFn('exp10')">10ˣ</button>
+    <button class='cb cb-fn' onclick="cFn('abs')">|x|</button>
+    <button class='cb cb-fn' onclick="cFn('n!')">n!</button>
+    <button class='cb cb-fn' onclick="cFn('pi')">π</button>
+    <button class='cb cb-fn' onclick="cFn('e')">e</button>
+    <button class='cb cb-fn' onclick="cFn('1/x')">1/x</button>
+  </div>
+  <div class='calc-grid calc-grid-4'>
+    <button class='cb cb-clear' onclick="cPress('C')">C</button>
+    <button class='cb cb-fn' onclick="cPress('⌫')">⌫</button>
+    <button class='cb cb-op' onclick="cPress('%')">%</button>
+    <button class='cb cb-op' onclick="cPress('÷')">÷</button>
+    <button class='cb cb-num' onclick="cPress('7')">7</button>
+    <button class='cb cb-num' onclick="cPress('8')">8</button>
+    <button class='cb cb-num' onclick="cPress('9')">9</button>
+    <button class='cb cb-op' onclick="cPress('×')">×</button>
+    <button class='cb cb-num' onclick="cPress('4')">4</button>
+    <button class='cb cb-num' onclick="cPress('5')">5</button>
+    <button class='cb cb-num' onclick="cPress('6')">6</button>
+    <button class='cb cb-op' onclick="cPress('-')">−</button>
+    <button class='cb cb-num' onclick="cPress('1')">1</button>
+    <button class='cb cb-num' onclick="cPress('2')">2</button>
+    <button class='cb cb-num' onclick="cPress('3')">3</button>
+    <button class='cb cb-op' onclick="cPress('+')">+</button>
+    <button class='cb cb-num cb-zero' onclick="cPress('0')">0</button>
+    <button class='cb cb-num' onclick="cPress('.')">.</button>
+    <button class='cb cb-eq' onclick="cPress('=')">=</button>
+  </div>
+
+  <div style='margin-top:20px;border-top:1px solid var(--border);padding-top:16px'>
+    <div class='field-label' style='margin-bottom:12px'>∫ Numerical Integration (Simpson's Rule)</div>
+    <p style='font-size:12px;color:var(--muted);margin-bottom:10px'>Enter a function of x, limits a and b, and number of steps.</p>
+    <div style='display:grid;grid-template-columns:1fr;gap:8px'>
+      <input class='ks-input' id='intFn' placeholder='Function of x — e.g. x*x or Math.sin(x)'>
+      <div style='display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px'>
+        <input class='ks-input' id='intA' placeholder='a (lower)' type='number'>
+        <input class='ks-input' id='intB' placeholder='b (upper)' type='number'>
+        <input class='ks-input' id='intN' placeholder='Steps (even)' type='number' value='100'>
+      </div>
+      <button class='btn btn-primary' onclick='doIntegrate()'>Integrate ∫</button>
+    </div>
+    <div class='pct-result' id='intResult' style='margin-top:10px'>—</div>
+  </div>
+
+  <div style='margin-top:20px;border-top:1px solid var(--border);padding-top:16px'>
+    <div class='field-label' style='margin-bottom:12px'>d/dx Numerical Differentiation</div>
+    <p style='font-size:12px;color:var(--muted);margin-bottom:10px'>Find the derivative of f(x) at a specific point x.</p>
+    <div style='display:grid;grid-template-columns:1fr 1fr;gap:8px'>
+      <input class='ks-input' id='diffFn' placeholder='Function — e.g. x*x*x'>
+      <input class='ks-input' id='diffX' placeholder='Value of x' type='number'>
+    </div>
+    <button class='btn btn-primary' style='margin-top:8px;width:100%' onclick='doDiff()'>Differentiate d/dx</button>
+    <div class='pct-result' id='diffResult' style='margin-top:10px'>—</div>
+  </div>
+
+  <div style='margin-top:20px;border-top:1px solid var(--border);padding-top:16px'>
+    <div class='field-label' style='margin-bottom:12px'>▦ 2×2 Matrix Operations</div>
+    <p style='font-size:12px;color:var(--muted);margin-bottom:10px'>Enter two 2×2 matrices and choose an operation.</p>
+    <div style='display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:10px'>
+      <div>
+        <div style='font-size:12px;color:var(--muted);margin-bottom:6px'>Matrix A</div>
+        <div style='display:grid;grid-template-columns:1fr 1fr;gap:6px'>
+          <input class='ks-input' id='ma1' placeholder='a' type='number'>
+          <input class='ks-input' id='ma2' placeholder='b' type='number'>
+          <input class='ks-input' id='ma3' placeholder='c' type='number'>
+          <input class='ks-input' id='ma4' placeholder='d' type='number'>
+        </div>
+      </div>
+      <div>
+        <div style='font-size:12px;color:var(--muted);margin-bottom:6px'>Matrix B</div>
+        <div style='display:grid;grid-template-columns:1fr 1fr;gap:6px'>
+          <input class='ks-input' id='mb1' placeholder='a' type='number'>
+          <input class='ks-input' id='mb2' placeholder='b' type='number'>
+          <input class='ks-input' id='mb3' placeholder='c' type='number'>
+          <input class='ks-input' id='mb4' placeholder='d' type='number'>
+        </div>
+      </div>
+    </div>
+    <div style='display:flex;flex-wrap:wrap;gap:8px'>
+      <button class='btn btn-primary' style='flex:1;min-width:100px' onclick='doMatrix("add")'>A + B</button>
+      <button class='btn btn-primary' style='flex:1;min-width:100px' onclick='doMatrix("sub")'>A − B</button>
+      <button class='btn btn-primary' style='flex:1;min-width:100px' onclick='doMatrix("mul")'>A × B</button>
+      <button class='btn btn-primary' style='flex:1;min-width:100px' onclick='doMatrix("detA")'>det(A)</button>
+      <button class='btn btn-primary' style='flex:1;min-width:100px' onclick='doMatrix("invA")'>A⁻¹</button>
+    </div>
+    <div class='pct-result' id='matResult' style='margin-top:10px;font-family:Rajdhani,sans-serif;font-size:1rem;text-align:left;white-space:pre'>—</div>
+  </div>`;
+}
+
+function doIntegrate(){
+  try{
+    const fnStr=document.getElementById('intFn').value;
+    const a=parseFloat(document.getElementById('intA').value);
+    const b=parseFloat(document.getElementById('intB').value);
+    let n=parseInt(document.getElementById('intN').value)||100;
+    if(n%2!==0) n++;
+    if(!fnStr||isNaN(a)||isNaN(b)){document.getElementById('intResult').textContent='Fill all fields';return;}
+    const f=new Function('x','"use strict";return '+fnStr);
+    const h=(b-a)/n;
+    let sum=f(a)+f(b);
+    for(let i=1;i<n;i++) sum+=(i%2===0?2:4)*f(a+i*h);
+    const result=(h/3)*sum;
+    document.getElementById('intResult').textContent='∫ Result ≈ '+parseFloat(result.toFixed(10));
+  }catch{document.getElementById('intResult').textContent='Invalid function — use valid JS math e.g. x*x or Math.sin(x)';}
+}
+
+function doDiff(){
+  try{
+    const fnStr=document.getElementById('diffFn').value;
+    const x=parseFloat(document.getElementById('diffX').value);
+    if(!fnStr||isNaN(x)){document.getElementById('diffResult').textContent='Fill all fields';return;}
+    const f=new Function('x','"use strict";return '+fnStr);
+    const h=1e-7;
+    const result=(f(x+h)-f(x-h))/(2*h);
+    document.getElementById('diffResult').textContent="f'("+x+") ≈ "+parseFloat(result.toFixed(10));
+  }catch{document.getElementById('diffResult').textContent='Invalid function — use valid JS math e.g. x*x*x';}
+}
+
+function doMatrix(op){
+  const v=id=>parseFloat(document.getElementById(id).value)||0;
+  const A=[[v('ma1'),v('ma2')],[v('ma3'),v('ma4')]];
+  const B=[[v('mb1'),v('mb2')],[v('mb3'),v('mb4')]];
+  const el=document.getElementById('matResult');
+  function fmt(m){return '['+m[0][0].toFixed(3)+',  '+m[0][1].toFixed(3)+']\n['+m[1][0].toFixed(3)+',  '+m[1][1].toFixed(3)+']';}
+  if(op==='add') el.textContent=fmt([[A[0][0]+B[0][0],A[0][1]+B[0][1]],[A[1][0]+B[1][0],A[1][1]+B[1][1]]]);
+  else if(op==='sub') el.textContent=fmt([[A[0][0]-B[0][0],A[0][1]-B[0][1]],[A[1][0]-B[1][0],A[1][1]-B[1][1]]]);
+  else if(op==='mul') el.textContent=fmt([
+    [A[0][0]*B[0][0]+A[0][1]*B[1][0], A[0][0]*B[0][1]+A[0][1]*B[1][1]],
+    [A[1][0]*B[0][0]+A[1][1]*B[1][0], A[1][0]*B[0][1]+A[1][1]*B[1][1]]
+  ]);
+  else if(op==='detA'){const d=A[0][0]*A[1][1]-A[0][1]*A[1][0];el.textContent='det(A) = '+d.toFixed(6);}
+  else if(op==='invA'){
+    const d=A[0][0]*A[1][1]-A[0][1]*A[1][0];
+    if(Math.abs(d)<1e-10){el.textContent='Matrix A is singular (no inverse)';return;}
+    el.textContent=fmt([[A[1][1]/d,-A[0][1]/d],[-A[1][0]/d,A[0][0]/d]]);
+  }
+}
+
+function buildPctCalc(){
+  return `<div class='pct-row'>
+    <div>
+      <div class='pct-label'>📌 What is X% of Y?</div>
+      <div style='display:flex;gap:8px;align-items:center'>
+        <input class='ks-input' id='pct1a' placeholder='X (%)' type='number' style='flex:1'>
+        <span style='color:var(--muted)'>% of</span>
+        <input class='ks-input' id='pct1b' placeholder='Y' type='number' style='flex:1'>
+        <button class='btn btn-primary' style='flex:0 0 auto;padding:12px 16px' onclick='calcPct1()'>Go</button>
+      </div>
+      <div class='pct-result' id='pct1r'>—</div>
+    </div>
+    <div>
+      <div class='pct-label'>📈 % Change from A to B?</div>
+      <div style='display:flex;gap:8px;align-items:center'>
+        <input class='ks-input' id='pct2a' placeholder='From' type='number' style='flex:1'>
+        <span style='color:var(--muted)'>→</span>
+        <input class='ks-input' id='pct2b' placeholder='To' type='number' style='flex:1'>
+        <button class='btn btn-primary' style='flex:0 0 auto;padding:12px 16px' onclick='calcPct2()'>Go</button>
+      </div>
+      <div class='pct-result' id='pct2r'>—</div>
+    </div>
+    <div>
+      <div class='pct-label'>🔁 X is what % of Y?</div>
+      <div style='display:flex;gap:8px;align-items:center'>
+        <input class='ks-input' id='pct3a' placeholder='X' type='number' style='flex:1'>
+        <span style='color:var(--muted)'>of</span>
+        <input class='ks-input' id='pct3b' placeholder='Y' type='number' style='flex:1'>
+        <button class='btn btn-primary' style='flex:0 0 auto;padding:12px 16px' onclick='calcPct3()'>Go</button>
+      </div>
+      <div class='pct-result' id='pct3r'>—</div>
+    </div>
+    <div>
+      <div class='pct-label'>🔍 X% of what number = Y?</div>
+      <div style='display:flex;gap:8px;align-items:center'>
+        <input class='ks-input' id='pct4a' placeholder='X (%)' type='number' style='flex:1'>
+        <span style='color:var(--muted)'>% of ? =</span>
+        <input class='ks-input' id='pct4b' placeholder='Y' type='number' style='flex:1'>
+        <button class='btn btn-primary' style='flex:0 0 auto;padding:12px 16px' onclick='calcPct4()'>Go</button>
+      </div>
+      <div class='pct-result' id='pct4r'>—</div>
+    </div>
+  </div>`;
+}
+function calcPct1(){const a=parseFloat(pct1a.value),b=parseFloat(pct1b.value);pct1r.textContent=(!isNaN(a)&&!isNaN(b))?((a/100)*b).toFixed(4):'Enter valid numbers';}
+function calcPct2(){const a=parseFloat(pct2a.value),b=parseFloat(pct2b.value);pct2r.textContent=(!isNaN(a)&&!isNaN(b)&&a!==0)?(((b-a)/Math.abs(a))*100).toFixed(4)+'%':'Enter valid numbers';}
+function calcPct3(){const a=parseFloat(pct3a.value),b=parseFloat(pct3b.value);pct3r.textContent=(!isNaN(a)&&!isNaN(b)&&b!==0)?((a/b)*100).toFixed(4)+'%':'Enter valid numbers';}
+function calcPct4(){const a=parseFloat(pct4a.value),b=parseFloat(pct4b.value);pct4r.textContent=(!isNaN(a)&&!isNaN(b)&&a!==0)?(b/(a/100)).toFixed(4):'Enter valid numbers';}
+
+function buildFinCalc(){
+  return `<div class='pct-row'>
+    <div>
+      <div class='pct-label'>💰 Simple Interest</div>
+      <div style='display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px'>
+        <input class='ks-input' id='siP' placeholder='Principal (₹)' type='number'>
+        <input class='ks-input' id='siR' placeholder='Rate (%/yr)' type='number'>
+        <input class='ks-input' id='siT' placeholder='Time (years)' type='number'>
+      </div>
+      <button class='btn btn-primary' style='margin-top:8px;width:100%' onclick='calcSI()'>Calculate SI</button>
+      <div class='pct-result' id='siResult'>—</div>
+    </div>
+    <div>
+      <div class='pct-label'>📈 Compound Interest</div>
+      <div style='display:grid;grid-template-columns:1fr 1fr;gap:8px'>
+        <input class='ks-input' id='ciP' placeholder='Principal (₹)' type='number'>
+        <input class='ks-input' id='ciR' placeholder='Rate (%/yr)' type='number'>
+        <input class='ks-input' id='ciT' placeholder='Time (years)' type='number'>
+        <input class='ks-input' id='ciN' placeholder='Compounding/yr' type='number' value='12'>
+      </div>
+      <button class='btn btn-primary' style='margin-top:8px;width:100%' onclick='calcCI()'>Calculate CI</button>
+      <div class='pct-result' id='ciResult'>—</div>
+    </div>
+    <div>
+      <div class='pct-label'>💸 Discount Calculator</div>
+      <div style='display:flex;gap:8px'>
+        <input class='ks-input' id='discP' placeholder='Original Price' type='number' style='flex:1'>
+        <input class='ks-input' id='discR' placeholder='Discount %' type='number' style='flex:1'>
+      </div>
+      <button class='btn btn-primary' style='margin-top:8px;width:100%' onclick='calcDisc()'>Calculate</button>
+      <div class='pct-result' id='discResult'>—</div>
+    </div>
+  </div>`;
+}
+function calcSI(){
+  const p=parseFloat(siP.value),r=parseFloat(siR.value),t=parseFloat(siT.value);
+  if(isNaN(p)||isNaN(r)||isNaN(t)){siResult.textContent='Enter all values';return;}
+  const si=(p*r*t)/100;
+  siResult.innerHTML=`SI = ₹${si.toFixed(2)} &nbsp;|&nbsp; Total = ₹${(p+si).toFixed(2)}`;
+}
+function calcCI(){
+  const p=parseFloat(ciP.value),r=parseFloat(ciR.value),t=parseFloat(ciT.value),n=parseFloat(ciN.value)||12;
+  if(isNaN(p)||isNaN(r)||isNaN(t)){ciResult.textContent='Enter all values';return;}
+  const amount=p*Math.pow((1+(r/100)/n),n*t);
+  ciResult.innerHTML=`CI = ₹${(amount-p).toFixed(2)} &nbsp;|&nbsp; Total = ₹${amount.toFixed(2)}`;
+}
+function calcDisc(){
+  const p=parseFloat(discP.value),r=parseFloat(discR.value);
+  if(isNaN(p)||isNaN(r)){discResult.textContent='Enter valid values';return;}
+  const save=p*(r/100);
+  discResult.innerHTML=`Save ₹${save.toFixed(2)} &nbsp;|&nbsp; Pay ₹${(p-save).toFixed(2)}`;
+}
+
+/* ═══════════════════════════════════════
+   NUMBER TO WORDS HUB
+═══════════════════════════════════════ */
+function renderNumWords(){
+  appEl.innerHTML=`<div class='page-wrap'>
+    <div class='back-row'><button class='back-btn' onclick="go('apps')">← Apps</button></div>
+    <div class='inner-card'>
+      <h2>🔤 Number Converter Hub</h2>
+      <p class='subtitle'>Convert numbers every possible way — words, Roman, and back.</p>
+      <div style='display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px' id='nwTabs'>
+        <button class='calc-tab active' onclick='switchNW("n2w",this)'>Number → Words</button>
+        <button class='calc-tab' onclick='switchNW("w2n",this)'>Words → Number</button>
+        <button class='calc-tab' onclick='switchNW("n2r",this)'>Number → Roman</button>
+        <button class='calc-tab' onclick='switchNW("r2n",this)'>Roman → Number</button>
+      </div>
+      <div id='nwBody'></div>
+      ${appFooter('numwords')}
+    </div>
+  </div>`;
+  if(!document.getElementById('calcHubStyle')) renderCalcHub();
+  switchNW('n2w', document.querySelector('.calc-tab'));
+}
+
+function switchNW(mode, btn){
+  document.querySelectorAll('.calc-tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  const body=document.getElementById('nwBody');
+  if(mode==='n2w') body.innerHTML=`
+    <label class='field-label'>Enter a Number</label>
+    <input class='ks-input' id='nwInput' type='number' placeholder='e.g. 42000'>
+    <button class='btn btn-primary' style='margin-top:10px' onclick='doN2W()'>Convert to Words</button>
+    <div class='pct-result' id='nwResult' style='margin-top:12px;text-align:left;font-size:1.1rem;line-height:1.6'>—</div>`;
+  else if(mode==='w2n') body.innerHTML=`
+    <label class='field-label'>Enter Number in Words</label>
+    <input class='ks-input' id='nwInput' placeholder='e.g. forty two thousand'>
+    <button class='btn btn-primary' style='margin-top:10px' onclick='doW2N()'>Convert to Number</button>
+    <div class='pct-result' id='nwResult' style='margin-top:12px'>—</div>`;
+  else if(mode==='n2r') body.innerHTML=`
+    <label class='field-label'>Enter a Number (1 – 3999)</label>
+    <input class='ks-input' id='nwInput' type='number' placeholder='e.g. 42' min='1' max='3999'>
+    <button class='btn btn-primary' style='margin-top:10px' onclick='doN2R()'>Convert to Roman</button>
+    <div class='pct-result' id='nwResult' style='margin-top:12px;font-size:1.6rem;letter-spacing:2px'>—</div>`;
+  else if(mode==='r2n') body.innerHTML=`
+    <label class='field-label'>Enter Roman Numerals</label>
+    <input class='ks-input' id='nwInput' placeholder='e.g. XLII' style='text-transform:uppercase'>
+    <button class='btn btn-primary' style='margin-top:10px' onclick='doR2N()'>Convert to Number</button>
+    <div class='pct-result' id='nwResult' style='margin-top:12px'>—</div>`;
+}
+
+function numToWords(n){
+  if(n===0) return 'zero';
+  if(n<0) return 'negative '+numToWords(-n);
+  const ones=['','one','two','three','four','five','six','seven','eight','nine','ten','eleven','twelve','thirteen','fourteen','fifteen','sixteen','seventeen','eighteen','nineteen'];
+  const tens=['','','twenty','thirty','forty','fifty','sixty','seventy','eighty','ninety'];
+  function helper(num){
+    if(num===0) return '';
+    if(num<20) return ones[num]+' ';
+    if(num<100) return tens[Math.floor(num/10)]+' '+(num%10?ones[num%10]+' ':'');
+    if(num<1000) return ones[Math.floor(num/100)]+' hundred '+(num%100?helper(num%100):'');
+    if(num<1000000) return helper(Math.floor(num/1000))+'thousand '+(num%1000?helper(num%1000):'');
+    if(num<1000000000) return helper(Math.floor(num/1000000))+'million '+(num%1000000?helper(num%1000000):'');
+    return helper(Math.floor(num/1000000000))+'billion '+(num%1000000000?helper(num%1000000000):'');
+  }
+  return helper(n).trim();
+}
+
+function wordsToNum(str){
+  const w=str.toLowerCase().trim();
+  const ones={zero:0,one:1,two:2,three:3,four:4,five:5,six:6,seven:7,eight:8,nine:9,ten:10,eleven:11,twelve:12,thirteen:13,fourteen:14,fifteen:15,sixteen:16,seventeen:17,eighteen:18,nineteen:19};
+  const tens={twenty:20,thirty:30,forty:40,fifty:50,sixty:60,seventy:70,eighty:80,ninety:90};
+  const mults={hundred:100,thousand:1000,million:1000000,billion:1000000000};
+  let current=0,result=0;
+  const words=w.split(/\s+/);
+  for(const word of words){
+    if(ones[word]!==undefined) current+=ones[word];
+    else if(tens[word]!==undefined) current+=tens[word];
+    else if(word==='hundred') current*=100;
+    else if(mults[word]){
+      if(word!=='hundred'){result+=(current||1)*mults[word];current=0;}
+    }
+  }
+  return result+current;
+}
+
+function toRoman(n){
+  const vals=[1000,900,500,400,100,90,50,40,10,9,5,4,1];
+  const syms=['M','CM','D','CD','C','XC','L','XL','X','IX','V','IV','I'];
+  let r='';
+  for(let i=0;i<vals.length;i++){while(n>=vals[i]){r+=syms[i];n-=vals[i];}}
+  return r;
+}
+
+function fromRoman(s){
+  const map={I:1,V:5,X:10,L:50,C:100,D:500,M:1000};
+  let r=0;
+  for(let i=0;i<s.length;i++){
+    const cur=map[s[i]],nxt=map[s[i+1]];
+    if(nxt&&cur<nxt){r-=cur;}else r+=cur;
+  }
+  return r;
+}
+
+function doN2W(){
+  const n=parseInt(document.getElementById('nwInput').value);
+  document.getElementById('nwResult').textContent=isNaN(n)?'Enter a valid number':numToWords(n);
+}
+function doW2N(){
+  const s=document.getElementById('nwInput').value;
+  if(!s.trim()){document.getElementById('nwResult').textContent='Enter words';return;}
+  const r=wordsToNum(s);
+  document.getElementById('nwResult').textContent=r||'Could not parse — try e.g. "forty two thousand"';
+}
+function doN2R(){
+  const n=parseInt(document.getElementById('nwInput').value);
+  if(isNaN(n)||n<1||n>3999){document.getElementById('nwResult').textContent='Enter a number between 1 and 3999';return;}
+  document.getElementById('nwResult').textContent=toRoman(n);
+}
+function doR2N(){
+  const s=document.getElementById('nwInput').value.toUpperCase().trim();
+  if(!s){document.getElementById('nwResult').textContent='Enter Roman numerals';return;}
+  const r=fromRoman(s);
+  document.getElementById('nwResult').textContent=r?r+' ('+numToWords(r)+')':'Invalid Roman numeral';
+}
+
+/* ═══════════════════════════════════════
+   MORSE CODE CONVERTER
+═══════════════════════════════════════ */
+const MORSE_MAP={
+  'A':'.-','B':'-...','C':'-.-.','D':'-..','E':'.','F':'..-.','G':'--.','H':'....','I':'..','J':'.---',
+  'K':'-.-','L':'.-..','M':'--','N':'-.','O':'---','P':'.--.','Q':'--.-','R':'.-.','S':'...','T':'-',
+  'U':'..-','V':'...-','W':'.--','X':'-..-','Y':'-.--','Z':'--..',
+  '0':'-----','1':'.----','2':'..---','3':'...--','4':'....-','5':'.....','6':'-....','7':'--...','8':'---..',
+  '9':'----.','.':'.-.-.-',',':'--..--','?':'..--..','!':'-.-.--','/':'-..-.','(':'-.--.',')':'-.--.-',
+  '&':'.-...',':':'---...',';':'-.-.-.','=':'-...-','+':'.-.-.', '-':'-....-','_':'..--.-',
+  '"':'.-..-.','$':'...-..-','@':'.--.-.', "'":'.----.',' ':'/'
+};
+const MORSE_REVERSE=Object.fromEntries(Object.entries(MORSE_MAP).map(([k,v])=>[v,k]));
+
+function textToMorse(text){
+  return text.toUpperCase().split('').map(c=>MORSE_MAP[c]||'').filter(Boolean).join(' ');
+}
+function morseToText(morse){
+  return morse.trim().split(' / ').map(word=>
+    word.split(' ').map(code=>MORSE_REVERSE[code]||'?').join('')
+  ).join(' ');
+}
+
+let morseAudioCtx=null;
+function getMorseCtx(){
+  if(!morseAudioCtx) morseAudioCtx=new(window.AudioContext||window.webkitAudioContext)();
+  return morseAudioCtx;
+}
+let morseNodes=[], morsePaused=false, morsePauseTime=0, morseStartTime=0, morseCtxOffset=0, morseCurrentMorse='';
+
+function stopMorse(){
+  if(morseAudioCtx){
+    morseNodes.forEach(n=>{try{n.stop();}catch(e){}});
+    morseNodes=[];
+  }
+  morsePaused=false;morsePauseTime=0;morseCtxOffset=0;
+  updateMorseButtons('idle');
+}
+
+function pauseMorse(){
+  if(!morseAudioCtx||morsePaused)return;
+  morsePauseTime=morseAudioCtx.currentTime;
+  morseNodes.forEach(n=>{try{n.stop();}catch(e){}});
+  morseNodes=[];
+  morsePaused=true;
+  morseCtxOffset=morsePauseTime-morseStartTime;
+  updateMorseButtons('paused');
+}
+
+function resumeMorse(){
+  if(!morsePaused||!morseCurrentMorse)return;
+  morsePaused=false;
+  playMorseFrom(morseCurrentMorse, morseCtxOffset);
+  updateMorseButtons('playing');
+}
+
+function updateMorseButtons(state){
+  const playBtn=document.getElementById('morseBtnPlay');
+  const pauseBtn=document.getElementById('morseBtnPause');
+  const resumeBtn=document.getElementById('morseBtnResume');
+  const stopBtn=document.getElementById('morseBtnStop');
+  if(!playBtn)return;
+  if(state==='idle'){
+    playBtn.style.display=''; pauseBtn.style.display='none';
+    resumeBtn.style.display='none'; stopBtn.style.display='none';
+  } else if(state==='playing'){
+    playBtn.style.display='none'; pauseBtn.style.display='';
+    resumeBtn.style.display='none'; stopBtn.style.display='';
+  } else if(state==='paused'){
+    playBtn.style.display='none'; pauseBtn.style.display='none';
+    resumeBtn.style.display=''; stopBtn.style.display='';
+  }
+}
+
+function playMorseFrom(morse, skipSeconds=0){
+  const ctx=getMorseCtx();
+  morseStartTime=ctx.currentTime;
+  morseCurrentMorse=morse;
+  const dot=0.08, dash=dot*3, gap=dot, letterGap=dot*3, wordGap=dot*7;
+  let t=ctx.currentTime+0.05;
+  const freq=600;
+  const tokens=morse.split(' ');
+  // Calculate total timeline first, then skip
+  let timeline=[];
+  let pos=0;
+  for(let i=0;i<tokens.length;i++){
+    const token=tokens[i];
+    if(token==='/'){pos+=wordGap;}
+    else{
+      for(let j=0;j<token.length;j++){
+        const dur=token[j]==='.'?dot:dash;
+        timeline.push({start:pos, dur});
+        pos+=dur;
+        if(j<token.length-1) pos+=gap;
+      }
+      if(i<tokens.length-1&&tokens[i+1]!=='/') pos+=letterGap;
+    }
+  }
+  const totalDur=pos;
+  morseNodes=[];
+  let scheduled=0;
+  timeline.forEach(({start,dur})=>{
+    if(start<skipSeconds) return;
+    const osc=ctx.createOscillator(), gain=ctx.createGain();
+    osc.connect(gain);gain.connect(ctx.destination);
+    osc.frequency.value=freq;osc.type='sine';
+    const bt=t+(start-skipSeconds);
+    gain.gain.setValueAtTime(0,bt);
+    gain.gain.linearRampToValueAtTime(0.4,bt+0.01);
+    gain.gain.setValueAtTime(0.4,bt+dur-0.01);
+    gain.gain.linearRampToValueAtTime(0,bt+dur);
+    osc.start(bt);osc.stop(bt+dur);
+    morseNodes.push(osc);
+    scheduled++;
+  });
+  // Auto-reset buttons when done
+  const remaining=(totalDur-skipSeconds)*1000+100;
+  setTimeout(()=>{
+    if(!morsePaused){morseNodes=[];updateMorseButtons('idle');}
+  }, remaining);
+  updateMorseButtons('playing');
+}
+
+function playMorse(morse){
+  stopMorse();
+  playMorseFrom(morse, 0);
+}
+
+function renderMorse(){
+  appEl.innerHTML=`<div class='page-wrap'>
+    <div class='back-row'><button class='back-btn' onclick="go('apps')">← Apps</button></div>
+    <div class='inner-card'>
+      <h2>📡 Morse Code Converter</h2>
+      <p class='subtitle'>Convert text to Morse code and back — with real beep sounds.</p>
+
+      <div style='display:flex;gap:8px;margin-bottom:18px' id='morseTabs'>
+        <button class='calc-tab active' onclick='switchMorse("t2m",this)'>Text → Morse</button>
+        <button class='calc-tab' onclick='switchMorse("m2t",this)'>Morse → Text</button>
+      </div>
+      <div id='morseBody'></div>
+
+      <div style='margin-top:20px;border-top:1px solid var(--border);padding-top:16px'>
+        <div class='field-label' style='margin-bottom:10px'>📖 Morse Code Reference</div>
+        <div style='display:grid;grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:6px' id='morseRef'></div>
+      </div>
+
+      ${appFooter('morse')}
+    </div>
+  </div>`;
+
+  // Build reference table
+  const refEl=document.getElementById('morseRef');
+  'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'.split('').forEach(c=>{
+    const div=document.createElement('div');
+    div.style.cssText='background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:6px 8px;text-align:center;';
+    div.innerHTML=`<div style='font-size:13px;font-weight:600;color:var(--text)'>${c}</div><div style='font-size:11px;color:var(--accent);font-family:Rajdhani,sans-serif;letter-spacing:2px'>${MORSE_MAP[c]}</div>`;
+    refEl.appendChild(div);
+  });
+
+  switchMorse('t2m', document.querySelector('.calc-tab'));
+}
+
+function switchMorse(mode, btn){
+  document.querySelectorAll('#morseTabs .calc-tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  const body=document.getElementById('morseBody');
+  if(mode==='t2m'){
+    body.innerHTML=`
+      <label class='field-label'>Your Text</label>
+      <textarea class='ks-input' id='morseInput' placeholder='Type anything... e.g. Hello World' rows='3' style='resize:vertical;font-family:DM Sans,sans-serif' oninput='liveT2M()'></textarea>
+      <label class='field-label' style='margin-top:12px'>Morse Code Output</label>
+      <div id='morseOutput' style='background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:16px;min-height:60px;font-family:Rajdhani,sans-serif;font-size:1.1rem;letter-spacing:3px;color:var(--accent);word-break:break-all;line-height:2'>—</div>
+      <div style='display:flex;flex-wrap:wrap;gap:8px;margin-top:12px'>
+        <button id='morseBtnPlay' class='btn btn-primary' style='flex:1;min-width:120px' onclick='playMorseOutput()'>🔊 Play Beeps</button>
+        <button id='morseBtnPause' class='btn' style='flex:1;min-width:100px;display:none;background:#1a2236;border:1px solid var(--border);color:#f5a623;border-radius:14px;padding:14px;cursor:pointer;font-family:DM Sans,sans-serif' onclick='pauseMorse()'>⏸ Pause</button>
+        <button id='morseBtnResume' class='btn' style='flex:1;min-width:100px;display:none;background:#1a2236;border:1px solid var(--border);color:#4ade80;border-radius:14px;padding:14px;cursor:pointer;font-family:DM Sans,sans-serif' onclick='resumeMorse()'>▶ Resume</button>
+        <button id='morseBtnStop' class='btn' style='flex:1;min-width:100px;display:none;background:#2a1020;border:1px solid #f87171;color:#f87171;border-radius:14px;padding:14px;cursor:pointer;font-family:DM Sans,sans-serif' onclick='stopMorse()'>⏹ Stop</button>
+        <button class='btn' style='flex:1;min-width:100px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:14px;padding:14px;cursor:pointer;font-family:DM Sans,sans-serif' onclick='copyMorse()'>📋 Copy</button>
+      </div>
+      <div id='morseMsg' style='font-size:12px;color:#4ade80;margin-top:6px;min-height:16px'></div>`;
+  } else {
+    body.innerHTML=`
+      <label class='field-label'>Morse Code Input</label>
+      <textarea class='ks-input' id='morseInput' placeholder='Enter morse... e.g. .... . .-.. .-.. --- / .-- --- .-. .-.. -..' rows='3' style='resize:vertical;font-family:Rajdhani,sans-serif;letter-spacing:2px' oninput='liveM2T()'></textarea>
+      <p style='font-size:12px;color:var(--muted);margin-top:4px'>Use space between letters, " / " between words</p>
+      <label class='field-label' style='margin-top:12px'>Decoded Text</label>
+      <div id='morseOutput' style='background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:16px;min-height:60px;font-size:1.3rem;font-weight:600;color:var(--text);word-break:break-all'>—</div>
+      <div style='display:flex;flex-wrap:wrap;gap:8px;margin-top:12px'>
+        <button id='morseBtnPlay' class='btn btn-primary' style='flex:1;min-width:120px' onclick='playMorseInput()'>🔊 Play Beeps</button>
+        <button id='morseBtnPause' class='btn' style='flex:1;min-width:100px;display:none;background:#1a2236;border:1px solid var(--border);color:#f5a623;border-radius:14px;padding:14px;cursor:pointer;font-family:DM Sans,sans-serif' onclick='pauseMorse()'>⏸ Pause</button>
+        <button id='morseBtnResume' class='btn' style='flex:1;min-width:100px;display:none;background:#1a2236;border:1px solid var(--border);color:#4ade80;border-radius:14px;padding:14px;cursor:pointer;font-family:DM Sans,sans-serif' onclick='resumeMorse()'>▶ Resume</button>
+        <button id='morseBtnStop' class='btn' style='flex:1;min-width:100px;display:none;background:#2a1020;border:1px solid #f87171;color:#f87171;border-radius:14px;padding:14px;cursor:pointer;font-family:DM Sans,sans-serif' onclick='stopMorse()'>⏹ Stop</button>
+        <button class='btn' style='flex:1;min-width:100px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:14px;padding:14px;cursor:pointer;font-family:DM Sans,sans-serif' onclick='copyMorse()'>📋 Copy</button>
+      </div>
+      <div id='morseMsg' style='font-size:12px;color:#4ade80;margin-top:6px;min-height:16px'></div>`;
+  }
+}
+
+function liveT2M(){
+  const val=document.getElementById('morseInput').value;
+  const out=val?textToMorse(val):'—';
+  document.getElementById('morseOutput').textContent=out;
+}
+function liveM2T(){
+  const val=document.getElementById('morseInput').value;
+  const out=val?morseToText(val):'—';
+  document.getElementById('morseOutput').textContent=out;
+}
+function playMorseOutput(){
+  const morse=document.getElementById('morseOutput').textContent;
+  if(morse&&morse!=='—') playMorse(morse);
+}
+function playMorseInput(){
+  const morse=document.getElementById('morseInput').value.trim();
+  if(morse) playMorse(morse);
+}
+function copyMorse(){
+  const out=document.getElementById('morseOutput').textContent;
+  if(out&&out!=='—'){
+    navigator.clipboard.writeText(out).then(()=>{
+      const msg=document.getElementById('morseMsg');
+      if(msg){msg.textContent='✅ Copied!';setTimeout(()=>msg.textContent='',2000);}
+    });
+  }
+}
+
+/* ═══════════════════════════════════════
+   GAMES HUB
+═══════════════════════════════════════ */
+const GAMES_LIST=[
+  {id:'ttt',    icon:'⭕', name:'Tic Tac Toe',  desc:'vs Friend or vs AI — Easy, Medium, Hard'},
+  {id:'g2048',  icon:'🔢', name:'2048',          desc:'Slide tiles and reach 2048'},
+  {id:'memory', icon:'🃏', name:'Memory Cards',  desc:'Flip and match all pairs'},
+  {id:'snake',  icon:'🐍', name:'Snake',         desc:'Classic snake — eat and grow'},
+  {id:'sudoku', icon:'🧩', name:'Sudoku',        desc:'Unlimited puzzles — Easy, Medium, Hard'},
+  {id:'wordsearch', icon:'🔤', name:'Word Search', desc:'Find hidden words — Easy, Medium, Hard'}
+];
+function renderGames(){
+  appEl.innerHTML=`<div class='page-wrap'>
+    <div class='back-row'><button class='back-btn' onclick="go('home')">← Back</button></div>
+    <div class='page-header'>
+      <div>
+        <div class='section-label'>🎮 Games</div>
+        <h2>Games by KS Tech</h2>
+      </div>
+    </div>
+    <div style='position:relative;margin-bottom:16px'>
+      <span style='position:absolute;left:16px;top:50%;transform:translateY(-50%);font-size:16px;pointer-events:none'>🔍</span>
+      <input class='ks-input' id='gameSearch' placeholder='Search games...' oninput='filterGames(this.value)' style='padding-left:44px;'>
+    </div>
+    <div class='apps-grid' id='gamesGrid'>
+      ${GAMES_LIST.map(g=>`
+      <div class='app-card' onclick="go('${g.id}')" data-name='${g.name.toLowerCase()}' data-desc='${g.desc.toLowerCase()}'>
+        <div class='app-card-left'><div class='app-icon'>${g.icon}</div><div><div class='app-name'>${g.name}</div><div class='app-desc'>${g.desc}</div></div></div>
+        <div class='app-arrow'>→</div>
+      </div>`).join('')}
+    </div>
+    <div id='noGamesMsg' style='display:none;text-align:center;padding:32px;color:var(--muted);font-size:14px'>😕 No games found.</div>
+  </div>`;
+}
+function filterGames(query){
+  const q=query.toLowerCase().trim();
+  const cards=document.querySelectorAll('#gamesGrid .app-card');
+  let visible=0;
+  cards.forEach(card=>{
+    const match=!q||card.dataset.name.includes(q)||card.dataset.desc.includes(q);
+    card.style.display=match?'':'none';
+    if(match) visible++;
+  });
+  const msg=document.getElementById('noGamesMsg');
+  if(msg) msg.style.display=visible===0?'block':'none';
+}
+
+/* ── TIC TAC TOE ── */
+let tttBoard, tttTurn, tttMode, tttScore={X:0,O:0,D:0}, tttDifficulty='medium';
+function renderTTT(){
+  if(!tttMode) tttMode='friend';
+  appEl.innerHTML=`<div class='page-wrap'>
+    <div class='back-row'><button class='back-btn' onclick="go('games')">← Games</button></div>
+    <div class='inner-card'>
+      <h2>⭕ Tic Tac Toe</h2>
+      <div style='display:flex;gap:8px;margin-bottom:12px' id='tttModeBtns'>
+        <button class='calc-tab ${tttMode==="friend"?"active":""}' onclick='setTTTMode("friend")'>👥 vs Friend</button>
+        <button class='calc-tab ${tttMode==="ai"?"active":""}' onclick='setTTTMode("ai")'>🤖 vs AI</button>
+      </div>
+      <div id='tttDiffRow' style='display:${tttMode==="ai"?"flex":"none"};gap:8px;margin-bottom:12px'>
+        <button class='calc-tab ${tttDifficulty==="easy"?"active":""}' onclick='setTTTDiff("easy")' style='font-size:12px'>😊 Easy</button>
+        <button class='calc-tab ${tttDifficulty==="medium"?"active":""}' onclick='setTTTDiff("medium")' style='font-size:12px'>🤔 Medium</button>
+        <button class='calc-tab ${tttDifficulty==="hard"?"active":""}' onclick='setTTTDiff("hard")' style='font-size:12px'>💀 Hard</button>
+      </div>
+      <div style='display:flex;justify-content:space-between;margin-bottom:14px;background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:12px'>
+        <div style='text-align:center'><div style='font-size:1.2rem;font-family:Rajdhani,sans-serif;font-weight:700;color:#4ade80'>${tttScore.X}</div><div style='font-size:11px;color:var(--muted)'>X Wins</div></div>
+        <div style='text-align:center'><div style='font-size:1.2rem;font-family:Rajdhani,sans-serif;font-weight:700;color:var(--muted)'>${tttScore.D}</div><div style='font-size:11px;color:var(--muted)'>Draws</div></div>
+        <div style='text-align:center'><div style='font-size:1.2rem;font-family:Rajdhani,sans-serif;font-weight:700;color:#f87171'>${tttScore.O}</div><div style='font-size:11px;color:var(--muted)'>O Wins</div></div>
+      </div>
+      <div id='tttStatus' style='text-align:center;font-size:1rem;color:var(--muted);margin-bottom:12px'>X's turn</div>
+      <div id='tttBoard' style='display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:300px;margin:0 auto'></div>
+      <button class='btn btn-primary' style='margin-top:16px;width:100%' onclick='resetTTT()'>🔄 New Game</button>
+    </div>
+  </div>`;
+  initTTT();
+}
+function setTTTMode(mode){
+  tttMode=mode; tttScore={X:0,O:0,D:0};
+  const diffRow=document.getElementById('tttDiffRow');
+  if(diffRow) diffRow.style.display=mode==='ai'?'flex':'none';
+  document.querySelectorAll('#tttModeBtns .calc-tab').forEach(b=>b.classList.remove('active'));
+  event.target.classList.add('active');
+  initTTT();
+}
+function setTTTDiff(diff){
+  tttDifficulty=diff; tttScore={X:0,O:0,D:0};
+  document.querySelectorAll('#tttDiffRow .calc-tab').forEach(b=>b.classList.remove('active'));
+  event.target.classList.add('active');
+  initTTT();
+  const status=document.getElementById('tttStatus');
+  if(status) status.textContent="X's turn";
+}
+function initTTT(){
+  tttBoard=Array(9).fill('');tttTurn='X';
+  renderTTTBoard();
+}
+function renderTTTBoard(winCells=[]){
+  const el=document.getElementById('tttBoard');
+  if(!el)return;
+  el.innerHTML=tttBoard.map((cell,i)=>{
+    const isWin=winCells.includes(i);
+    const color=cell==='X'?'#4ade80':cell==='O'?'#f87171':'var(--muted)';
+    return `<button onclick='tttClick(${i})' style='
+      height:90px;border-radius:14px;border:2px solid ${isWin?'var(--accent)':'var(--border)'};
+      background:${isWin?'rgba(245,166,35,0.15)':'var(--bg2)'};
+      font-size:2rem;font-weight:800;color:${color};cursor:pointer;
+      transition:transform .15s,background .2s;font-family:Syne,sans-serif;
+    ' onmouseover='this.style.transform="scale(1.05)"' onmouseout='this.style.transform="scale(1)"'>${cell}</button>`;
+  }).join('');
+}
+function tttClick(i){
+  if(tttBoard[i]||tttCheckWin()) return;
+  tttBoard[i]=tttTurn;
+  const win=tttCheckWin();
+  if(win){
+    tttScore[tttTurn]++;
+    document.getElementById('tttStatus').innerHTML=`<span style='color:var(--accent);font-weight:700'>${tttTurn} wins! 🎉</span>`;
+    renderTTTBoard(win);return;
+  }
+  if(tttBoard.every(c=>c)){
+    tttScore.D++;
+    document.getElementById('tttStatus').textContent="It's a draw! 🤝";
+    renderTTTBoard();return;
+  }
+  tttTurn=tttTurn==='X'?'O':'X';
+  document.getElementById('tttStatus').textContent=`${tttTurn}'s turn`;
+  renderTTTBoard();
+  if(tttMode==='ai'&&tttTurn==='O') setTimeout(tttAIMove,400);
+}
+function tttCheckWin(){
+  const lines=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+  for(const [a,b,c] of lines) if(tttBoard[a]&&tttBoard[a]===tttBoard[b]&&tttBoard[a]===tttBoard[c]) return [a,b,c];
+  return null;
+}
+function tttAIMove(){
+  function checkWinBoard(b){
+    const lines=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+    for(const [a,bc,c] of lines) if(b[a]&&b[a]===b[bc]&&b[a]===b[c]) return b[a];
+    return null;
+  }
+  function minimax(board, isMax, depth){
+    const win=checkWinBoard(board);
+    if(win==='O') return 10-depth;
+    if(win==='X') return depth-10;
+    if(board.every(c=>c)) return 0;
+    let best=isMax?-Infinity:Infinity;
+    board.forEach((_,i)=>{
+      if(!board[i]){
+        board[i]=isMax?'O':'X';
+        const score=minimax(board,!isMax,depth+1);
+        board[i]='';
+        best=isMax?Math.max(best,score):Math.min(best,score);
+      }
+    });
+    return best;
+  }
+
+  const empty=tttBoard.map((v,i)=>v===''?i:-1).filter(i=>i>=0);
+
+  // Easy: 70% random move
+  if(tttDifficulty==='easy'){
+    if(Math.random()<0.7){
+      tttClick(empty[Math.floor(Math.random()*empty.length)]);return;
+    }
+  }
+
+  // Medium: block wins, take wins, else random
+  if(tttDifficulty==='medium'){
+    // Check if AI can win
+    for(const i of empty){
+      tttBoard[i]='O';
+      if(checkWinBoard(tttBoard)){tttBoard[i]='';tttClick(i);return;}
+      tttBoard[i]='';
+    }
+    // Block player win
+    for(const i of empty){
+      tttBoard[i]='X';
+      if(checkWinBoard(tttBoard)){tttBoard[i]='';tttClick(i);return;}
+      tttBoard[i]='';
+    }
+    // Take center or random
+    if(tttBoard[4]===''){tttClick(4);return;}
+    tttClick(empty[Math.floor(Math.random()*empty.length)]);
+    return;
+  }
+
+  // Hard: full minimax — unbeatable
+  let best=-Infinity, move=empty[0];
+  empty.forEach(i=>{
+    tttBoard[i]='O';
+    const score=minimax([...tttBoard],false,0);
+    tttBoard[i]='';
+    if(score>best){best=score;move=i;}
+  });
+  tttClick(move);
+}
+function resetTTT(){initTTT();document.getElementById('tttStatus').textContent="X's turn";}
+
+/* ── 2048 ── */
+let g2048Board, g2048Score, g2048Best=0, g2048Over, g2048Diff='medium';
+function renderG2048(){
+  appEl.innerHTML=`<div class='page-wrap'>
+    <div class='back-row'><button class='back-btn' onclick="go('games')">← Games</button></div>
+    <div class='inner-card'>
+      <h2>🔢 2048</h2>
+      <div id='g2048DiffRow' style='display:flex;gap:8px;margin-bottom:12px'>
+        <button class='calc-tab ${g2048Diff==="easy"?"active":""}' onclick='set2048Diff("easy")' style='font-size:12px'>😊 Easy<br><span style='font-size:10px;opacity:.7'>4×4 slow</span></button>
+        <button class='calc-tab ${g2048Diff==="medium"?"active":""}' onclick='set2048Diff("medium")' style='font-size:12px'>🤔 Medium<br><span style='font-size:10px;opacity:.7'>4×4 normal</span></button>
+        <button class='calc-tab ${g2048Diff==="hard"?"active":""}' onclick='set2048Diff("hard")' style='font-size:12px'>💀 Hard<br><span style='font-size:10px;opacity:.7'>5×5 fast</span></button>
+      </div>
+      <div style='display:flex;justify-content:space-between;align-items:center;margin-bottom:14px'>
+        <div style='display:flex;gap:10px'>
+          <div style='background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:8px 16px;text-align:center'>
+            <div style='font-size:11px;color:var(--muted)'>SCORE</div>
+            <div id='g2048Score' style='font-family:Rajdhani,sans-serif;font-size:1.3rem;font-weight:700;color:var(--accent)'>0</div>
+          </div>
+          <div style='background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:8px 16px;text-align:center'>
+            <div style='font-size:11px;color:var(--muted)'>BEST</div>
+            <div id='g2048Best' style='font-family:Rajdhani,sans-serif;font-size:1.3rem;font-weight:700;color:#a78bfa'>0</div>
+          </div>
+        </div>
+        <button class='btn btn-primary' style='padding:10px 18px' onclick='init2048()'>New</button>
+      </div>
+      <div id='g2048Grid' style='display:grid;grid-template-columns:repeat(${g2048Diff==="hard"?5:4},1fr);gap:8px;background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:12px;touch-action:none'></div>
+      <div id='g2048Msg' style='text-align:center;margin-top:12px;font-size:1.1rem;font-weight:700;min-height:28px'></div>
+      <p style='font-size:12px;color:var(--muted);text-align:center;margin-top:8px'>Swipe or use arrow keys to slide tiles</p>
+    </div>
+  </div>`;
+  init2048();
+  setup2048Touch();
+  setup2048Keys();
+}
+const TILE_COLORS={2:'#3d2a1e',4:'#4a2e1a',8:'#7c3a1a',16:'#8b2e0a',32:'#9b2200',64:'#a31500',128:'#7c4a00',256:'#8b5a00',512:'#6b4c00',1024:'#4a3d00',2048:'#2a3300'};
+function set2048Diff(diff){
+  g2048Diff=diff; g2048Best=0;
+  document.querySelectorAll('#g2048DiffRow .calc-tab').forEach(b=>b.classList.remove('active'));
+  event.target.classList.add('active');
+  const grid=document.getElementById('g2048Grid');
+  if(grid){const cols=diff==='hard'?5:4;grid.style.gridTemplateColumns=`repeat(${cols},1fr)`;}
+  init2048();
+}
+function get2048Size(){return g2048Diff==='hard'?25:16;}
+function get2048Cols(){return g2048Diff==='hard'?5:4;}
+function init2048(){
+  const size=get2048Size();
+  g2048Board=Array(size).fill(0);g2048Score=0;g2048Over=false;
+  add2048Tile();add2048Tile();
+  const grid=document.getElementById('g2048Grid');
+  if(grid) grid.style.gridTemplateColumns=`repeat(${get2048Cols()},1fr)`;
+  render2048();
+}
+function add2048Tile(){
+  const empty=g2048Board.map((v,i)=>v===0?i:-1).filter(i=>i>=0);
+  if(!empty.length)return;
+  const idx=empty[Math.floor(Math.random()*empty.length)];
+  g2048Board[idx]=Math.random()<0.9?2:4;
+}
+function render2048(){
+  const grid=document.getElementById('g2048Grid');
+  if(!grid)return;
+  grid.innerHTML=g2048Board.map(v=>`
+    <div style='
+      height:${g2048Diff==="hard"?52:64}px;border-radius:10px;display:flex;align-items:center;justify-content:center;
+      background:${v?TILE_COLORS[v]||'#1a0a00':'#161c2a'};
+      border:1px solid ${v?'rgba(245,166,35,0.3)':'var(--border)'};
+      font-family:Rajdhani,sans-serif;font-size:${v>=1000?'1.1rem':v>=100?'1.3rem':'1.5rem'};
+      font-weight:700;color:${v?'#f5a623':'#2a334a'};
+      transition:all .1s;
+    '>${v||''}</div>`).join('');
+  const scoreEl=document.getElementById('g2048Score');
+  const bestEl=document.getElementById('g2048Best');
+  if(scoreEl) scoreEl.textContent=g2048Score;
+  if(g2048Score>g2048Best) g2048Best=g2048Score;
+  if(bestEl) bestEl.textContent=g2048Best;
+  const msg=document.getElementById('g2048Msg');
+  if(msg) msg.innerHTML=g2048Over?`<span style='color:#f87171'>Game Over! 😢</span>`:g2048Board.includes(2048)?`<span style='color:#4ade80'>You reached 2048! 🎉</span>`:'';
+}
+function slide2048(row,size=4){
+  let r=row.filter(v=>v);
+  for(let i=0;i<r.length-1;i++) if(r[i]===r[i+1]){r[i]*=2;g2048Score+=r[i];r.splice(i+1,1);i++;}
+  while(r.length<size) r.push(0);
+  return r;
+}
+function move2048(dir){
+  if(g2048Over)return;
+  const cols=get2048Cols(), rows=get2048Size()/cols;
+  let b=[...g2048Board], changed=false;
+  for(let i=0;i<(dir==='left'||dir==='right'?rows:cols);i++){
+    let row=[];
+    if(dir==='left') row=b.slice(i*cols,i*cols+cols);
+    else if(dir==='right') row=b.slice(i*cols,i*cols+cols).reverse();
+    else if(dir==='up'){for(let k=0;k<rows;k++) row.push(b[i+k*cols]);}
+    else{for(let k=rows-1;k>=0;k--) row.push(b[i+k*cols]);}
+    const slid=slide2048(row,dir==='left'||dir==='right'?cols:rows);
+    if(dir==='right') slid.reverse();
+    for(let j=0;j<slid.length;j++){
+      let idx;
+      if(dir==='left') idx=i*cols+j;
+      else if(dir==='right') idx=i*cols+j;
+      else if(dir==='up') idx=i+j*cols;
+      else idx=i+(rows-1-j)*cols;
+      if(b[idx]!==slid[j]){changed=true;b[idx]=slid[j];}
+    }
+  }
+  if(changed){g2048Board=b;add2048Tile();
+    if(!canMove2048()) g2048Over=true;
+    render2048();
+  }
+}
+function canMove2048(){
+  const cols=get2048Cols(),rows=get2048Size()/cols;
+  if(g2048Board.includes(0))return true;
+  for(let i=0;i<rows;i++) for(let j=0;j<cols;j++){
+    const idx=i*cols+j;
+    if(j<cols-1&&g2048Board[idx]===g2048Board[idx+1])return true;
+    if(i<rows-1&&g2048Board[idx]===g2048Board[idx+cols])return true;
+  }
+  return false;
+}
+function setup2048Keys(){
+  document.onkeydown=e=>{
+    const map={ArrowLeft:'left',ArrowRight:'right',ArrowUp:'up',ArrowDown:'down'};
+    if(map[e.key]){e.preventDefault();move2048(map[e.key]);}
+  };
+}
+function setup2048Touch(){
+  let sx,sy;
+  const el=document.getElementById('g2048Grid');
+  if(!el)return;
+  el.addEventListener('touchstart',e=>{sx=e.touches[0].clientX;sy=e.touches[0].clientY;},{passive:true});
+  el.addEventListener('touchend',e=>{
+    const dx=e.changedTouches[0].clientX-sx, dy=e.changedTouches[0].clientY-sy;
+    if(Math.max(Math.abs(dx),Math.abs(dy))<20)return;
+    if(Math.abs(dx)>Math.abs(dy)) move2048(dx>0?'right':'left');
+    else move2048(dy>0?'down':'up');
+  },{passive:true});
+}
+
+/* ── MEMORY CARDS ── */
+const MEMORY_EMOJIS=['🎯','🎲','🎸','🎺','🎻','🎹','🎨','🎭','🏆','🎪','🚀','🌟','🦁','🐯','🦊','🦋'];
+let memCards, memFlipped, memMatched, memLock, memMoves, memTimer, memTime, memDiff='medium';
+function renderMemory(){
+  appEl.innerHTML=`<div class='page-wrap'>
+    <div class='back-row'><button class='back-btn' onclick="go('games')">← Games</button></div>
+    <div class='inner-card'>
+      <h2>🃏 Memory Cards</h2>
+      <div id='memDiffRow' style='display:flex;gap:8px;margin-bottom:12px'>
+        <button class='calc-tab ${memDiff==="easy"?"active":""}' onclick='setMemDiff("easy")' style='font-size:12px'>😊 Easy<br><span style='font-size:10px;opacity:.7'>4 pairs</span></button>
+        <button class='calc-tab ${memDiff==="medium"?"active":""}' onclick='setMemDiff("medium")' style='font-size:12px'>🤔 Medium<br><span style='font-size:10px;opacity:.7'>8 pairs</span></button>
+        <button class='calc-tab ${memDiff==="hard"?"active":""}' onclick='setMemDiff("hard")' style='font-size:12px'>💀 Hard<br><span style='font-size:10px;opacity:.7'>16 pairs</span></button>
+      </div>
+      <div style='display:flex;justify-content:space-between;align-items:center;margin-bottom:14px'>
+        <div style='display:flex;gap:10px'>
+          <div style='background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:8px 14px;text-align:center'>
+            <div style='font-size:11px;color:var(--muted)'>MOVES</div>
+            <div id='memMoves' style='font-family:Rajdhani,sans-serif;font-size:1.2rem;font-weight:700;color:var(--accent)'>0</div>
+          </div>
+          <div style='background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:8px 14px;text-align:center'>
+            <div style='font-size:11px;color:var(--muted)'>TIME</div>
+            <div id='memTime' style='font-family:Rajdhani,sans-serif;font-size:1.2rem;font-weight:700;color:#a78bfa'>0s</div>
+          </div>
+        </div>
+        <button class='btn btn-primary' style='padding:10px 18px' onclick='initMemory()'>New</button>
+      </div>
+      <div id='memGrid' style='display:grid;grid-template-columns:repeat(4,1fr);gap:8px'></div>
+      <div id='memWin' style='text-align:center;margin-top:14px;min-height:24px'></div>
+    </div>
+  </div>`;
+  initMemory();
+}
+function setMemDiff(diff){
+  memDiff=diff;
+  document.querySelectorAll('#memDiffRow .calc-tab').forEach(b=>b.classList.remove('active'));
+  event.target.classList.add('active');
+  initMemory();
+}
+function getMemPairs(){return memDiff==='easy'?4:memDiff==='hard'?16:8;}
+function getMemCols(){return memDiff==='hard'?8:4;}
+function initMemory(){
+  clearInterval(memTimer);
+  const pairCount=getMemPairs();
+  // For hard mode (16 pairs), use extended emoji set
+  const allEmojis=[...MEMORY_EMOJIS,'🌈','🌊','🔥','⚡','🌙','☀️','🎃','🏄','🎯','🦄','🌺','🍕','🎸','🏆','💎','🚂'];
+  const pairs=allEmojis.slice(0,pairCount);
+  memCards=[...pairs,...pairs].sort(()=>Math.random()-.5).map((e,i)=>({id:i,emoji:e,flipped:false,matched:false}));
+  memFlipped=[];memMatched=0;memLock=false;memMoves=0;memTime=0;
+  memTimer=setInterval(()=>{
+    memTime++;
+    const el=document.getElementById('memTime');
+    if(el) el.textContent=memTime+'s';
+  },1000);
+  renderMemGrid();
+}
+function renderMemGrid(){
+  const grid=document.getElementById('memGrid');
+  if(!grid)return;
+  grid.style.gridTemplateColumns=`repeat(${getMemCols()},1fr)`;
+  grid.innerHTML=memCards.map(c=>`
+    <div onclick='flipCard(${c.id})' style='
+      height:${memDiff==='hard'?50:70}px;border-radius:12px;display:flex;align-items:center;justify-content:center;
+      font-size:${c.flipped||c.matched?(memDiff==='hard'?'1.3rem':'1.8rem'):'1rem'};
+      background:${c.matched?'rgba(74,222,128,0.1)':c.flipped?'var(--surface2)':'var(--bg2)'};
+      color:var(--text);
+      border:2px solid ${c.matched?'#4ade80':c.flipped?'var(--accent)':'var(--border)'};
+      cursor:${c.matched?'default':'pointer'};transition:all .25s;
+    '>${c.flipped||c.matched?c.emoji:'?'}</div>`).join('');
+  const mv=document.getElementById('memMoves');
+  if(mv) mv.textContent=memMoves;
+}
+function flipCard(id){
+  if(memLock) return;
+  const card=memCards.find(c=>c.id===id);
+  if(!card||card.flipped||card.matched)return;
+  card.flipped=true;memFlipped.push(card);
+  renderMemGrid();
+  if(memFlipped.length===2){
+    memMoves++;memLock=true;
+    if(memFlipped[0].emoji===memFlipped[1].emoji){
+      memFlipped.forEach(c=>c.matched=true);
+      memMatched+=2;memFlipped=[];memLock=false;
+      renderMemGrid();
+      if(memMatched===memCards.length){
+        clearInterval(memTimer);
+        const win=document.getElementById('memWin');
+        if(win) win.innerHTML=`<span style='color:#4ade80;font-weight:700;font-size:1.1rem'>🎉 Completed in ${memMoves} moves & ${memTime}s!</span>`;
+      }
+    } else {
+      setTimeout(()=>{memFlipped.forEach(c=>c.flipped=false);memFlipped=[];memLock=false;renderMemGrid();},900);
+    }
+  }
+}
+
+/* ── SNAKE ── */
+let snakeBody, snakeDir, snakeFood, snakeScore, snakeBest=0, snakeLoop, snakeRunning, snakeSpeed, snakeDiff='medium';
+function renderSnake(){
+  appEl.innerHTML=`<div class='page-wrap'>
+    <div class='back-row'><button class='back-btn' onclick="go('games')">← Games</button></div>
+    <div class='inner-card'>
+      <h2>🐍 Snake</h2>
+      <div id='snakeDiffRow' style='display:flex;gap:8px;margin-bottom:12px'>
+        <button class='calc-tab ${snakeDiff==="easy"?"active":""}' onclick='setSnakeDiff("easy")' style='font-size:12px'>😊 Easy<br><span style='font-size:10px;opacity:.7'>slow</span></button>
+        <button class='calc-tab ${snakeDiff==="medium"?"active":""}' onclick='setSnakeDiff("medium")' style='font-size:12px'>🤔 Medium<br><span style='font-size:10px;opacity:.7'>normal</span></button>
+        <button class='calc-tab ${snakeDiff==="hard"?"active":""}' onclick='setSnakeDiff("hard")' style='font-size:12px'>💀 Hard<br><span style='font-size:10px;opacity:.7'>fast!</span></button>
+      </div>
+      <div style='display:flex;justify-content:space-between;align-items:center;margin-bottom:12px'>
+        <div style='display:flex;gap:10px'>
+          <div style='background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:8px 14px;text-align:center'>
+            <div style='font-size:11px;color:var(--muted)'>SCORE</div>
+            <div id='snakeScore' style='font-family:Rajdhani,sans-serif;font-size:1.2rem;font-weight:700;color:var(--accent)'>0</div>
+          </div>
+          <div style='background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:8px 14px;text-align:center'>
+            <div style='font-size:11px;color:var(--muted)'>BEST</div>
+            <div id='snakeBest' style='font-family:Rajdhani,sans-serif;font-size:1.2rem;font-weight:700;color:#a78bfa'>0</div>
+          </div>
+        </div>
+        <button class='btn btn-primary' style='padding:10px 18px' onclick='initSnake()'>New</button>
+      </div>
+      <canvas id='snakeCanvas' style='display:block;border-radius:14px;border:1px solid var(--border);background:var(--bg2);width:100%;max-width:360px;margin:0 auto;touch-action:none'></canvas>
+      <div id='snakeMsg' style='text-align:center;margin-top:10px;min-height:24px'></div>
+      <div style='display:grid;grid-template-columns:repeat(3,1fr);gap:8px;max-width:200px;margin:14px auto 0'>
+        <div></div>
+        <button onclick="snakeBtn('up')" style='padding:14px;border-radius:12px;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-size:1.2rem;cursor:pointer'>▲</button>
+        <div></div>
+        <button onclick="snakeBtn('left')" style='padding:14px;border-radius:12px;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-size:1.2rem;cursor:pointer'>◀</button>
+        <button onclick="snakeBtn('down')" style='padding:14px;border-radius:12px;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-size:1.2rem;cursor:pointer'>▼</button>
+        <button onclick="snakeBtn('right')" style='padding:14px;border-radius:12px;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-size:1.2rem;cursor:pointer'>▶</button>
+      </div>
+      <p style='font-size:12px;color:var(--muted);text-align:center;margin-top:8px'>Arrow keys or tap buttons above</p>
+    </div>
+  </div>`;
+  initSnake();
+  setupSnakeKeys();
+  setupSnakeTouch();
+}
+const SNAKE_COLS=18, SNAKE_ROWS=18, SNAKE_SIZE=20;
+function setSnakeDiff(diff){
+  snakeDiff=diff; snakeBest=0;
+  document.querySelectorAll('#snakeDiffRow .calc-tab').forEach(b=>b.classList.remove('active'));
+  event.target.classList.add('active');
+  initSnake();
+}
+function getSnakeStartSpeed(){return snakeDiff==='easy'?220:snakeDiff==='hard'?90:150;}
+function initSnake(){
+  clearInterval(snakeLoop);
+  snakeBody=[{x:9,y:9},{x:8,y:9},{x:7,y:9}];
+  snakeDir={x:1,y:0};snakeScore=0;snakeRunning=true;snakeSpeed=getSnakeStartSpeed();
+  placeSnakeFood();
+  const canvas=document.getElementById('snakeCanvas');
+  if(canvas){canvas.width=SNAKE_COLS*SNAKE_SIZE;canvas.height=SNAKE_ROWS*SNAKE_SIZE;}
+  drawSnake();
+  snakeLoop=setInterval(stepSnake,snakeSpeed);
+  const msg=document.getElementById('snakeMsg');
+  if(msg) msg.innerHTML='';
+}
+function placeSnakeFood(){
+  do{snakeFood={x:Math.floor(Math.random()*SNAKE_COLS),y:Math.floor(Math.random()*SNAKE_ROWS)};}
+  while(snakeBody.some(s=>s.x===snakeFood.x&&s.y===snakeFood.y));
+}
+function stepSnake(){
+  if(!snakeRunning)return;
+  const head={x:snakeBody[0].x+snakeDir.x,y:snakeBody[0].y+snakeDir.y};
+  if(head.x<0||head.x>=SNAKE_COLS||head.y<0||head.y>=SNAKE_ROWS||snakeBody.some(s=>s.x===head.x&&s.y===head.y)){
+    snakeRunning=false;clearInterval(snakeLoop);
+    if(snakeScore>snakeBest){snakeBest=snakeScore;const b=document.getElementById('snakeBest');if(b)b.textContent=snakeBest;}
+    const msg=document.getElementById('snakeMsg');
+    if(msg) msg.innerHTML=`<span style='color:#f87171;font-weight:700'>Game Over! Score: ${snakeScore} 💀</span>`;
+    return;
+  }
+  snakeBody.unshift(head);
+  if(head.x===snakeFood.x&&head.y===snakeFood.y){
+    snakeScore++;
+    const sc=document.getElementById('snakeScore');if(sc)sc.textContent=snakeScore;
+    if(snakeScore>snakeBest){snakeBest=snakeScore;const b=document.getElementById('snakeBest');if(b)b.textContent=snakeBest;}
+    placeSnakeFood();
+    if(snakeScore%5===0){clearInterval(snakeLoop);const minSpeed=snakeDiff==='easy'?120:snakeDiff==='hard'?40:60;snakeSpeed=Math.max(minSpeed,snakeSpeed-15);snakeLoop=setInterval(stepSnake,snakeSpeed);}
+  } else snakeBody.pop();
+  drawSnake();
+}
+function drawSnake(){
+  const canvas=document.getElementById('snakeCanvas');
+  if(!canvas)return;
+  const ctx=canvas.getContext('2d');
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  // Draw grid dots
+  ctx.fillStyle='#161c2a';
+  for(let x=0;x<SNAKE_COLS;x++) for(let y=0;y<SNAKE_ROWS;y++){
+    ctx.beginPath();ctx.arc(x*SNAKE_SIZE+SNAKE_SIZE/2,y*SNAKE_SIZE+SNAKE_SIZE/2,1,0,Math.PI*2);ctx.fill();
+  }
+  // Draw food
+  ctx.fillStyle='#f5a623';
+  ctx.shadowColor='#f5a623';ctx.shadowBlur=12;
+  ctx.beginPath();ctx.arc(snakeFood.x*SNAKE_SIZE+SNAKE_SIZE/2,snakeFood.y*SNAKE_SIZE+SNAKE_SIZE/2,SNAKE_SIZE/2-2,0,Math.PI*2);ctx.fill();
+  ctx.shadowBlur=0;
+  // Draw snake
+  snakeBody.forEach((seg,i)=>{
+    const ratio=1-i/snakeBody.length;
+    ctx.fillStyle=`hsl(${140+i*2},${70-i}%,${45+ratio*15}%)`;
+    ctx.shadowColor=i===0?'#4ade80':'transparent';ctx.shadowBlur=i===0?10:0;
+    const pad=i===0?1:2;
+    const rx=seg.x*SNAKE_SIZE+pad, ry=seg.y*SNAKE_SIZE+pad, rw=SNAKE_SIZE-pad*2, rh=SNAKE_SIZE-pad*2, rr=4;
+    ctx.beginPath();ctx.moveTo(rx+rr,ry);ctx.lineTo(rx+rw-rr,ry);ctx.arcTo(rx+rw,ry,rx+rw,ry+rr,rr);ctx.lineTo(rx+rw,ry+rh-rr);ctx.arcTo(rx+rw,ry+rh,rx+rw-rr,ry+rh,rr);ctx.lineTo(rx+rr,ry+rh);ctx.arcTo(rx,ry+rh,rx,ry+rh-rr,rr);ctx.lineTo(rx,ry+rr);ctx.arcTo(rx,ry,rx+rr,ry,rr);ctx.closePath();
+    ctx.fill();
+  });
+  ctx.shadowBlur=0;
+}
+function setupSnakeKeys(){
+  document.onkeydown=e=>{
+    const map={ArrowUp:{x:0,y:-1},ArrowDown:{x:0,y:1},ArrowLeft:{x:-1,y:0},ArrowRight:{x:1,y:0}};
+    if(map[e.key]){
+      e.preventDefault();
+      const d=map[e.key];
+      if(d.x!==-snakeDir.x||d.y!==-snakeDir.y) snakeDir=d;
+    }
+  };
+}
+function snakeBtn(dir){
+  const map={up:{x:0,y:-1},down:{x:0,y:1},left:{x:-1,y:0},right:{x:1,y:0}};
+  const d=map[dir];
+  if(d.x!==-snakeDir.x||d.y!==-snakeDir.y) snakeDir=d;
+}
+function setupSnakeTouch(){
+  let sx,sy;
+  const canvas=document.getElementById('snakeCanvas');
+  if(!canvas)return;
+  canvas.addEventListener('touchstart',e=>{sx=e.touches[0].clientX;sy=e.touches[0].clientY;},{passive:true});
+  canvas.addEventListener('touchend',e=>{
+    const dx=e.changedTouches[0].clientX-sx,dy=e.changedTouches[0].clientY-sy;
+    if(Math.max(Math.abs(dx),Math.abs(dy))<15)return;
+    if(Math.abs(dx)>Math.abs(dy)) snakeBtn(dx>0?'right':'left');
+    else snakeBtn(dy>0?'down':'up');
+  },{passive:true});
+}
+/* ═══════════════════════════════════════
+   SHARED GAME HELPERS
+═══════════════════════════════════════ */
+function shuffle(arr){
+  for(let i=arr.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [arr[i],arr[j]]=[arr[j],arr[i]];
+  }
+  return arr;
+}
+function fmtTime(s){
+  const m=Math.floor(s/60), sec=s%60;
+  return `${m}:${sec<10?'0':''}${sec}`;
+}
+
+/* ═══════════════════════════════════════
+   SUDOKU — unlimited procedurally generated puzzles
+═══════════════════════════════════════ */
+let sudokuSolution=null, sudokuBoard=null, sudokuGiven=null, sudokuNotes=null;
+let sudokuSelected=null, sudokuDifficulty='easy';
+let sudokuMistakes=0, sudokuMaxMistakes=3;
+let sudokuTimer=0, sudokuInterval=null, sudokuNotesMode=false;
+let sudokuGameOver=false, sudokuWon=false;
+let sudokuSettings={timer:false,mistakes:false,notes:false};
+
+function sudokuValid(board,r,c,val){
+  for(let i=0;i<9;i++){
+    if(board[r][i]===val) return false;
+    if(board[i][c]===val) return false;
+  }
+  const br=Math.floor(r/3)*3, bc=Math.floor(c/3)*3;
+  for(let i=0;i<3;i++)for(let j=0;j<3;j++){
+    if(board[br+i][bc+j]===val) return false;
+  }
+  return true;
+}
+function sudokuFillBoard(board){
+  for(let r=0;r<9;r++){
+    for(let c=0;c<9;c++){
+      if(board[r][c]===0){
+        const nums=shuffle([1,2,3,4,5,6,7,8,9]);
+        for(const n of nums){
+          if(sudokuValid(board,r,c,n)){
+            board[r][c]=n;
+            if(sudokuFillBoard(board)) return true;
+            board[r][c]=0;
+          }
+        }
+        return false;
+      }
+    }
+  }
+  return true;
+}
+function sudokuCountSolutions(board,cap){
+  let r=-1,c=-1;
+  outer: for(let i=0;i<9;i++){for(let j=0;j<9;j++){if(board[i][j]===0){r=i;c=j;break outer;}}}
+  if(r===-1) return 1;
+  let total=0;
+  for(let n=1;n<=9;n++){
+    if(sudokuValid(board,r,c,n)){
+      board[r][c]=n;
+      total+=sudokuCountSolutions(board,cap-total);
+      board[r][c]=0;
+      if(total>=cap) return total;
+    }
+  }
+  return total;
+}
+function sudokuGenerate(difficulty){
+  const solved=Array.from({length:9},()=>Array(9).fill(0));
+  sudokuFillBoard(solved);
+  const puzzle=solved.map(row=>row.slice());
+  const positions=shuffle(Array.from({length:81},(_,i)=>i));
+  const targets={easy:38,medium:30,hard:24};
+  const target=targets[difficulty]||30;
+  let clues=81;
+  for(const pos of positions){
+    if(clues<=target) break;
+    const r=Math.floor(pos/9), c=pos%9;
+    if(puzzle[r][c]===0) continue;
+    const backup=puzzle[r][c];
+    puzzle[r][c]=0;
+    const copy=puzzle.map(row=>row.slice());
+    const solCount=sudokuCountSolutions(copy,2);
+    if(solCount!==1) puzzle[r][c]=backup; else clues--;
+  }
+  return {solution:solved,puzzle};
+}
+function renderSudoku(){
+  if(!sudokuSolution){ newSudokuGame(); return; }
+  appEl.innerHTML=`<div class='page-wrap'>
+    <div class='back-row'><button class='back-btn' onclick="go('games')">← Games</button></div>
+    <div class='inner-card'>
+      <h2>🧩 Sudoku</h2>
+      <p class='subtitle'>Unlimited puzzles, freshly generated every time.</p>
+
+      <div style='display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px'>
+        <div class='sudoku-diff-group'>
+          <button class='calc-tab ${sudokuDifficulty==='easy'?'active':''}' onclick='setSudokuDiff("easy")'>😊 Easy</button>
+          <button class='calc-tab ${sudokuDifficulty==='medium'?'active':''}' onclick='setSudokuDiff("medium")'>🤔 Medium</button>
+          <button class='calc-tab ${sudokuDifficulty==='hard'?'active':''}' onclick='setSudokuDiff("hard")'>💀 Hard</button>
+        </div>
+        <div class='sudoku-toggle-row'>
+          <button class='sudoku-icon-toggle ${sudokuSettings.timer?'active':''}' onclick='toggleSudokuSetting("timer")' title='Timer: ${sudokuSettings.timer?'On':'Off'}'>⏱</button>
+          <button class='sudoku-icon-toggle ${sudokuSettings.mistakes?'active':''}' onclick='toggleSudokuSetting("mistakes")' title='Mistakes: ${sudokuSettings.mistakes?'On':'Off'}'>❌</button>
+          <button class='sudoku-icon-toggle ${sudokuSettings.notes?'active':''}' onclick='toggleSudokuSetting("notes")' title='Pencil Marks: ${sudokuSettings.notes?'On':'Off'}'>✏️</button>
+        </div>
+      </div>
+
+      <div style='display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:10px 16px'>
+        <div style='display:${sudokuSettings.timer?'block':'none'}'><div style='font-size:11px;color:var(--muted)'>TIME</div><div id='sudokuTimeDisplay' style='font-family:Rajdhani,sans-serif;font-size:1.2rem;font-weight:700;color:var(--accent)'>${fmtTime(sudokuTimer)}</div></div>
+        <div style='display:${sudokuSettings.mistakes?'block':'none'}'><div style='font-size:11px;color:var(--muted)'>MISTAKES</div><div id='sudokuMistakeDisplay' style='font-family:Rajdhani,sans-serif;font-size:1.2rem;font-weight:700;color:#f87171'>${sudokuMistakes}/${sudokuMaxMistakes}</div></div>
+        <div><div style='font-size:11px;color:var(--muted)'>DIFFICULTY</div><div style='font-family:Rajdhani,sans-serif;font-size:1.2rem;font-weight:700;color:var(--text);text-transform:capitalize'>${sudokuDifficulty}</div></div>
+      </div>
+
+      <div id='sudokuGrid' style='display:grid;grid-template-columns:repeat(9,1fr);gap:0;max-width:400px;margin:0 auto;background:var(--surface);border:2px solid var(--text);border-radius:8px;overflow:hidden'></div>
+
+      <div style='display:flex;justify-content:center;margin-top:16px'>
+        <button class='btn ${sudokuNotesMode?'btn-primary':'btn-secondary'}' id='sudokuNotesBtn' style='display:${sudokuSettings.notes?'inline-flex':'none'}' onclick='toggleSudokuNotesMode()'>✏️ Pencil Mode: ${sudokuNotesMode?'On':'Off'}</button>
+      </div>
+
+      <div id='sudokuNumPad' style='display:grid;grid-template-columns:repeat(9,1fr);gap:6px;max-width:400px;margin:14px auto 0'></div>
+      <div style='display:flex;justify-content:center;margin-top:10px'>
+        <button class='btn btn-ghost' onclick='eraseSudokuCell()'>⌫ Erase</button>
+      </div>
+
+      <div id='sudokuMsg' style='text-align:center;margin-top:14px;font-size:1rem;font-weight:700;min-height:26px'></div>
+
+      <button class='btn btn-primary' style='margin-top:10px;width:100%' onclick='newSudokuGame()'>🔄 New Game</button>
+    </div>
+  </div>`;
+  renderSudokuGrid();
+  renderSudokuNumPad();
+  startSudokuTimer();
+}
+function setSudokuDiff(diff){ sudokuDifficulty=diff; newSudokuGame(); }
+function toggleSudokuSetting(key){
+  sudokuSettings[key]=!sudokuSettings[key];
+  if(key==='notes' && !sudokuSettings.notes) sudokuNotesMode=false;
+  if(key==='timer'){ if(sudokuSettings.timer) startSudokuTimer(); else stopSudokuTimer(); }
+  renderSudoku();
+}
+function newSudokuGame(){
+  const {solution,puzzle}=sudokuGenerate(sudokuDifficulty);
+  sudokuSolution=solution;
+  sudokuBoard=puzzle.map(row=>row.slice());
+  sudokuGiven=puzzle.map(row=>row.map(v=>v!==0));
+  sudokuNotes=Array.from({length:9},()=>Array.from({length:9},()=>new Set()));
+  sudokuSelected=null;
+  sudokuMistakes=0; sudokuTimer=0; sudokuNotesMode=false;
+  sudokuGameOver=false; sudokuWon=false;
+  stopSudokuTimer();
+  renderSudoku();
+}
+function renderSudokuGrid(){
+  const grid=document.getElementById('sudokuGrid');
+  if(!grid) return;
+  let html='';
+  for(let r=0;r<9;r++){
+    for(let c=0;c<9;c++){
+      const val=sudokuBoard[r][c];
+      const isGiven=sudokuGiven[r][c];
+      const isSelected=sudokuSelected&&sudokuSelected.r===r&&sudokuSelected.c===c;
+      const sameRC=sudokuSelected&&(sudokuSelected.r===r||sudokuSelected.c===c||(Math.floor(sudokuSelected.r/3)===Math.floor(r/3)&&Math.floor(sudokuSelected.c/3)===Math.floor(c/3)));
+      const sameVal=sudokuSelected&&val!==0&&sudokuBoard[sudokuSelected.r][sudokuSelected.c]===val;
+      const isWrong=!isGiven&&val!==0&&sudokuSettings.mistakes&&val!==sudokuSolution[r][c];
+      let bg='var(--surface)';
+      if(isSelected) bg='rgba(245,166,35,0.28)';
+      else if(sameVal) bg='rgba(245,166,35,0.15)';
+      else if(sameRC) bg='var(--bg2)';
+      const bTop=r%3===0?'2px solid var(--text)':'1px solid var(--border)';
+      const bLeft=c%3===0?'2px solid var(--text)':'1px solid var(--border)';
+      const bRight=c===8?'2px solid var(--text)':'1px solid transparent';
+      const bBottom=r===8?'2px solid var(--text)':'1px solid transparent';
+      let content='';
+      if(val!==0){
+        content=`<span style='color:${isWrong?'#f87171':isGiven?'var(--text)':'var(--accent)'};font-weight:${isGiven?800:700}'>${val}</span>`;
+      } else if(sudokuSettings.notes && sudokuNotes[r][c].size>0){
+        content="<div style='display:grid;grid-template-columns:repeat(3,1fr);width:100%;height:100%'>"+
+          Array.from({length:9},(_,i)=>i+1).map(n=>`<div style='font-size:8px;color:var(--muted);display:flex;align-items:center;justify-content:center'>${sudokuNotes[r][c].has(n)?n:''}</div>`).join('')+
+          '</div>';
+      }
+      html+=`<div onclick='selectSudokuCell(${r},${c})' style='aspect-ratio:1;display:flex;align-items:center;justify-content:center;background:${bg};cursor:pointer;font-family:Rajdhani,sans-serif;font-size:1.15rem;border-top:${bTop};border-left:${bLeft};border-right:${bRight};border-bottom:${bBottom};user-select:none'>${content}</div>`;
+    }
+  }
+  grid.innerHTML=html;
+}
+function renderSudokuNumPad(){
+  const pad=document.getElementById('sudokuNumPad');
+  if(!pad) return;
+  pad.innerHTML=Array.from({length:9},(_,i)=>i+1).map(n=>
+    `<button onclick='inputSudokuNumber(${n})' style='padding:12px 0;border-radius:10px;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:Rajdhani,sans-serif;font-size:1.2rem;font-weight:700;cursor:pointer'>${n}</button>`
+  ).join('');
+}
+function selectSudokuCell(r,c){
+  if(sudokuGameOver) return;
+  sudokuSelected={r,c};
+  renderSudokuGrid();
+}
+function inputSudokuNumber(n){
+  if(sudokuGameOver||!sudokuSelected) return;
+  const {r,c}=sudokuSelected;
+  if(sudokuGiven[r][c]) return;
+  if(sudokuNotesMode && sudokuSettings.notes){
+    if(sudokuBoard[r][c]!==0) return;
+    const notes=sudokuNotes[r][c];
+    if(notes.has(n)) notes.delete(n); else notes.add(n);
+    renderSudokuGrid();
+    return;
+  }
+  sudokuBoard[r][c]=n;
+  sudokuNotes[r][c]=new Set();
+  if(n!==sudokuSolution[r][c] && sudokuSettings.mistakes){
+    sudokuMistakes++;
+    const m=document.getElementById('sudokuMistakeDisplay');
+    if(m) m.textContent=`${sudokuMistakes}/${sudokuMaxMistakes}`;
+    if(sudokuMistakes>=sudokuMaxMistakes){
+      sudokuGameOver=true; stopSudokuTimer();
+      showSudokuMsg('💀 Game Over — too many mistakes. Try again!','#f87171');
+      renderSudokuGrid();
+      return;
+    }
+  }
+  renderSudokuGrid();
+  checkSudokuWin();
+}
+function eraseSudokuCell(){
+  if(sudokuGameOver||!sudokuSelected) return;
+  const {r,c}=sudokuSelected;
+  if(sudokuGiven[r][c]) return;
+  sudokuBoard[r][c]=0;
+  sudokuNotes[r][c]=new Set();
+  renderSudokuGrid();
+}
+function toggleSudokuNotesMode(){
+  sudokuNotesMode=!sudokuNotesMode;
+  const btn=document.getElementById('sudokuNotesBtn');
+  if(btn){btn.textContent=`✏️ Pencil Mode: ${sudokuNotesMode?'On':'Off'}`;btn.className=`btn ${sudokuNotesMode?'btn-primary':'btn-secondary'}`;}
+}
+function showSudokuMsg(text,color){
+  const msg=document.getElementById('sudokuMsg');
+  if(msg){msg.textContent=text;msg.style.color=color||'var(--accent)';}
+}
+function checkSudokuWin(){
+  for(let r=0;r<9;r++)for(let c=0;c<9;c++){
+    if(sudokuBoard[r][c]===0||sudokuBoard[r][c]!==sudokuSolution[r][c]) return;
+  }
+  sudokuWon=true; sudokuGameOver=true;
+  stopSudokuTimer();
+  showSudokuMsg(`🎉 Solved in ${fmtTime(sudokuTimer)}!`,'#4ade80');
+}
+function startSudokuTimer(){
+  stopSudokuTimer();
+  if(!sudokuSettings.timer) return;
+  sudokuInterval=setInterval(()=>{
+    if(sudokuGameOver) return;
+    sudokuTimer++;
+    const el=document.getElementById('sudokuTimeDisplay');
+    if(el) el.textContent=fmtTime(sudokuTimer);
+  },1000);
+}
+function stopSudokuTimer(){ clearInterval(sudokuInterval); sudokuInterval=null; }
+
+/* ═══════════════════════════════════════
+   WORD SEARCH — unlimited procedurally generated puzzles
+═══════════════════════════════════════ */
+const WS_WORD_BANK=['PYTHON','JAVASCRIPT','KEYBOARD','MONITOR','LAPTOP','MOBILE','INTERNET','BROWSER','SOFTWARE','HARDWARE','NETWORK','SERVER','DATABASE','ALGORITHM','FUNCTION','VARIABLE','ROBOT','ROCKET','PLANET','GALAXY','OCEAN','MOUNTAIN','FOREST','DESERT','RIVER','VOLCANO','THUNDER','RAINBOW','SUNSET','GLACIER','DOLPHIN','ELEPHANT','GIRAFFE','PENGUIN','CHEETAH','DRAGON','PHOENIX','WIZARD','CASTLE','KNIGHT','TREASURE','PUZZLE','MYSTERY','ADVENTURE','JOURNEY','VICTORY','CHAMPION','STRATEGY','FORTRESS','KINGDOM'];
+let wsGrid=null, wsWords=[], wsSize=9, wsDifficulty='easy';
+let wsSelecting=false, wsStart=null, wsCurrentPath=[];
+let wsTimer=0, wsInterval=null, wsFoundCount=0;
+
+function wsPlaceWord(grid,word,dirs,size){
+  const positions=shuffle(Array.from({length:size*size},(_,i)=>i));
+  for(const pos of positions){
+    const r0=Math.floor(pos/size), c0=pos%size;
+    for(const [dr,dc] of shuffle(dirs.slice())){
+      const rEnd=r0+dr*(word.length-1), cEnd=c0+dc*(word.length-1);
+      if(rEnd<0||rEnd>=size||cEnd<0||cEnd>=size) continue;
+      let ok=true;
+      for(let i=0;i<word.length;i++){
+        const r=r0+dr*i,c=c0+dc*i;
+        if(grid[r][c]!==''&&grid[r][c]!==word[i]){ok=false;break;}
+      }
+      if(!ok) continue;
+      const cells=[];
+      for(let i=0;i<word.length;i++){
+        const r=r0+dr*i,c=c0+dc*i;
+        grid[r][c]=word[i];
+        cells.push([r,c]);
+      }
+      return cells;
+    }
+  }
+  return null;
+}
+function wsGenerate(difficulty){
+  const cfg={
+    easy:{size:9,count:6,dirs:[[0,1],[1,0]]},
+    medium:{size:11,count:8,dirs:[[0,1],[1,0],[1,1],[1,-1]]},
+    hard:{size:13,count:10,dirs:[[0,1],[1,0],[1,1],[1,-1],[0,-1],[-1,0],[-1,-1],[-1,1]]}
+  }[difficulty];
+  const {size,count,dirs}=cfg;
+  let grid,words,attempts=0;
+  do{
+    grid=Array.from({length:size},()=>Array(size).fill(''));
+    const pool=shuffle(WS_WORD_BANK.filter(w=>w.length<=size).slice());
+    words=[];
+    for(const w of pool){
+      if(words.length>=count) break;
+      const cells=wsPlaceWord(grid,w,dirs,size);
+      if(cells) words.push({word:w,cells,found:false});
+    }
+    attempts++;
+  } while(words.length<count && attempts<10);
+  for(let r=0;r<size;r++)for(let c=0;c<size;c++){
+    if(grid[r][c]==='') grid[r][c]=String.fromCharCode(65+Math.floor(Math.random()*26));
+  }
+  return {grid,words,size};
+}
+function renderWordSearch(){
+  if(!wsGrid){ newWordSearchGame(); return; }
+  appEl.innerHTML=`<div class='page-wrap'>
+    <div class='back-row'><button class='back-btn' onclick="go('games')">← Games</button></div>
+    <div class='inner-card'>
+      <h2>🔤 Word Search</h2>
+      <p class='subtitle'>Find every hidden word. Tap-drag across letters to select.</p>
+      <div style='display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px'>
+        <button class='calc-tab ${wsDifficulty==='easy'?'active':''}' onclick='setWsDiff("easy")'>😊 Easy</button>
+        <button class='calc-tab ${wsDifficulty==='medium'?'active':''}' onclick='setWsDiff("medium")'>🤔 Medium</button>
+        <button class='calc-tab ${wsDifficulty==='hard'?'active':''}' onclick='setWsDiff("hard")'>💀 Hard</button>
+      </div>
+      <div style='display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:10px 16px'>
+        <div><div style='font-size:11px;color:var(--muted)'>TIME</div><div id='wsTimeDisplay' style='font-family:Rajdhani,sans-serif;font-size:1.2rem;font-weight:700;color:var(--accent)'>${fmtTime(wsTimer)}</div></div>
+        <div><div style='font-size:11px;color:var(--muted)'>FOUND</div><div id='wsFoundDisplay' style='font-family:Rajdhani,sans-serif;font-size:1.2rem;font-weight:700;color:#4ade80'>${wsFoundCount}/${wsWords.length}</div></div>
+      </div>
+      <div id='wsGrid' style='display:grid;gap:2px;max-width:420px;margin:0 auto;user-select:none;touch-action:none'></div>
+      <div style='margin-top:16px;display:flex;flex-wrap:wrap;gap:8px;justify-content:center' id='wsWordList'></div>
+      <div id='wsMsg' style='text-align:center;margin-top:14px;font-size:1rem;font-weight:700;min-height:26px'></div>
+      <button class='btn btn-primary' style='margin-top:10px;width:100%' onclick='newWordSearchGame()'>🔄 New Puzzle</button>
+    </div>
+  </div>`;
+  renderWsGrid();
+  renderWsWordList();
+  startWsTimer();
+  window.onmouseup=wsEndSel;
+}
+function setWsDiff(diff){ wsDifficulty=diff; newWordSearchGame(); }
+function newWordSearchGame(){
+  const {grid,words,size}=wsGenerate(wsDifficulty);
+  wsGrid=grid; wsWords=words; wsSize=size;
+  wsFoundCount=0; wsTimer=0; wsSelecting=false; wsStart=null; wsCurrentPath=[];
+  stopWsTimer();
+  renderWordSearch();
+}
+function renderWsGrid(){
+  const el=document.getElementById('wsGrid');
+  if(!el) return;
+  el.style.gridTemplateColumns=`repeat(${wsSize},1fr)`;
+  let html='';
+  for(let r=0;r<wsSize;r++){
+    for(let c=0;c<wsSize;c++){
+      const inPath=wsCurrentPath.some(p=>p[0]===r&&p[1]===c);
+      const isFound=wsWords.some(w=>w.found&&w.cells.some(p=>p[0]===r&&p[1]===c));
+      let bg='var(--surface2)';
+      if(isFound) bg='rgba(74,222,128,0.35)';
+      else if(inPath) bg='rgba(245,166,35,0.35)';
+      html+=`<div data-r='${r}' data-c='${c}' onmousedown='wsStartSel(${r},${c})' onmouseenter='wsDragSel(${r},${c})' onmouseup='wsEndSel()' ontouchstart='wsTouchStart(event)' ontouchmove='wsTouchMove(event)' ontouchend='wsEndSel()' style='aspect-ratio:1;display:flex;align-items:center;justify-content:center;background:${bg};border-radius:4px;font-family:Rajdhani,sans-serif;font-weight:700;font-size:${wsSize>11?'0.8rem':'0.95rem'};color:var(--text);cursor:pointer'>${wsGrid[r][c]}</div>`;
+    }
+  }
+  el.innerHTML=html;
+}
+function wsTouchStart(e){
+  e.preventDefault();
+  const t=e.touches[0], el=document.elementFromPoint(t.clientX,t.clientY);
+  if(el&&el.dataset&&el.dataset.r!==undefined) wsStartSel(+el.dataset.r,+el.dataset.c);
+}
+function wsTouchMove(e){
+  e.preventDefault();
+  const t=e.touches[0], el=document.elementFromPoint(t.clientX,t.clientY);
+  if(el&&el.dataset&&el.dataset.r!==undefined) wsDragSel(+el.dataset.r,+el.dataset.c);
+}
+function wsStartSel(r,c){
+  wsSelecting=true; wsStart={r,c}; wsCurrentPath=[[r,c]];
+  renderWsGrid();
+}
+function wsDragSel(r,c){
+  if(!wsSelecting||!wsStart) return;
+  const dr=r-wsStart.r, dc=c-wsStart.c;
+  const steps=Math.max(Math.abs(dr),Math.abs(dc));
+  if(steps===0){ wsCurrentPath=[[wsStart.r,wsStart.c]]; renderWsGrid(); return; }
+  if(!(dr===0||dc===0||Math.abs(dr)===Math.abs(dc))) return;
+  const stepR=dr===0?0:dr/Math.abs(dr), stepC=dc===0?0:dc/Math.abs(dc);
+  const path=[];
+  for(let i=0;i<=steps;i++) path.push([wsStart.r+stepR*i,wsStart.c+stepC*i]);
+  wsCurrentPath=path;
+  renderWsGrid();
+}
+function wsEndSel(){
+  if(!wsSelecting) return;
+  wsSelecting=false;
+  checkWsSelection();
+  wsCurrentPath=[]; wsStart=null;
+  renderWsGrid();
+}
+function checkWsSelection(){
+  if(wsCurrentPath.length<2) return;
+  const sel=wsCurrentPath.map(([r,c])=>wsGrid[r][c]).join('');
+  const selRev=sel.split('').reverse().join('');
+  for(const w of wsWords){
+    if(w.found) continue;
+    if(w.word===sel||w.word===selRev){
+      const cellSet=new Set(w.cells.map(p=>p[0]+','+p[1]));
+      const pathSet=new Set(wsCurrentPath.map(p=>p[0]+','+p[1]));
+      if(cellSet.size===pathSet.size && [...cellSet].every(k=>pathSet.has(k))){
+        w.found=true; wsFoundCount++;
+        const el=document.getElementById('wsFoundDisplay');
+        if(el) el.textContent=`${wsFoundCount}/${wsWords.length}`;
+        renderWsWordList();
+        if(wsFoundCount>=wsWords.length){
+          stopWsTimer();
+          showWsMsg(`🎉 All words found in ${fmtTime(wsTimer)}!`,'#4ade80');
+        }
+        return;
+      }
+    }
+  }
+}
+function renderWsWordList(){
+  const el=document.getElementById('wsWordList');
+  if(!el) return;
+  el.innerHTML=wsWords.map(w=>`<span style='padding:6px 12px;border-radius:20px;font-size:12px;font-weight:600;background:${w.found?'rgba(74,222,128,0.15)':'var(--surface2)'};color:${w.found?'#4ade80':'var(--text)'};text-decoration:${w.found?'line-through':'none'};border:1px solid var(--border)'>${w.word}</span>`).join('');
+}
+function showWsMsg(text,color){
+  const msg=document.getElementById('wsMsg');
+  if(msg){msg.textContent=text;msg.style.color=color||'var(--accent)';}
+}
+function startWsTimer(){
+  stopWsTimer();
+  wsInterval=setInterval(()=>{
+    wsTimer++;
+    const el=document.getElementById('wsTimeDisplay');
+    if(el) el.textContent=fmtTime(wsTimer);
+  },1000);
+}
+function stopWsTimer(){ clearInterval(wsInterval); wsInterval=null; }
+
+/* ═══════════════════════════════════════
+   HEALTH HUB
+═══════════════════════════════════════ */
+const HEALTH_TOOLS=[
+  {id:'breath',    icon:'🌬️', name:'Breathing Exercise',   desc:'Box, 4-7-8 & deep breathing guides'},
+  {id:'lunghold',  icon:'🫁', name:'Lung Capacity Test',    desc:'How long can you hold your breath?'},
+  {id:'breathrate',icon:'📊', name:'Breath Rate Counter',   desc:'Count your breaths per minute'},
+  {id:'heartrate', icon:'❤️', name:'Heart Rate Monitor',    desc:'Manual pulse counter — tap to measure'},
+  {id:'heartzone', icon:'🏃', name:'Heart Rate Zones',      desc:'Find your training zones by age & max HR'},
+  {id:'stress',    icon:'🧘', name:'Stress Relief Timer',   desc:'Guided relaxation with breathing pauses'},
+  {id:'eyetimer',  icon:'👁️', name:'20-20-20 Eye Timer',   desc:'Reminder to rest eyes every 20 minutes'},
+  {id:'water',     icon:'💧', name:'Water Intake Tracker',  desc:'Track daily hydration goals'},
+  {id:'cycle',     icon:'🌸', name:'Menstrual Cycle Tracker', desc:'Predict your next period & fertile window'}
+];
+
+function renderHealth(){
+  appEl.innerHTML=`<div class='page-wrap'>
+    <div class='back-row'><button class='back-btn' onclick="go('apps')">← Apps</button></div>
+    <div class='page-header'>
+      <div>
+        <div class='section-label'>🩺 Health Hub</div>
+        <h2>Health & Wellness Tools</h2>
+      </div>
+    </div>
+    <div style='position:relative;margin-bottom:16px'>
+      <span style='position:absolute;left:16px;top:50%;transform:translateY(-50%);font-size:16px;pointer-events:none'>🔍</span>
+      <input class='ks-input' id='healthSearch' placeholder='Search health tools...' oninput='filterHealth(this.value)' style='padding-left:44px;'>
+    </div>
+    <div class='apps-grid' id='healthGrid'>
+      ${HEALTH_TOOLS.map(t=>`
+      <div class='app-card' onclick="go('${t.id}')" data-name='${t.name.toLowerCase()}' data-desc='${t.desc.toLowerCase()}'>
+        <div class='app-card-left'>
+          <div class='app-icon'>${t.icon}</div>
+          <div>
+            <div class='app-name'>${t.name}</div>
+            <div class='app-desc'>${t.desc}</div>
+          </div>
+        </div>
+        <div class='app-arrow'>→</div>
+      </div>`).join('')}
+    </div>
+    <div id='noHealthMsg' style='display:none;text-align:center;padding:32px;color:var(--muted);font-size:14px'>😕 No tools found.</div>
+  </div>`;
+}
+function filterHealth(query){
+  const q=query.toLowerCase().trim();
+  const cards=document.querySelectorAll('#healthGrid .app-card');
+  let visible=0;
+  cards.forEach(card=>{
+    const match=!q||card.dataset.name.includes(q)||card.dataset.desc.includes(q);
+    card.style.display=match?'':'none';
+    if(match) visible++;
+  });
+  const msg=document.getElementById('noHealthMsg');
+  if(msg) msg.style.display=visible===0?'block':'none';
+}
+
+/* ═══════════════════════════════════════
+   FUN HUB (added)
+═══════════════════════════════════════ */
+const FUN_TOOLS=[
+  {id:'lifestats',  icon:'💫', name:'Life in Numbers',        desc:'Days, heartbeats, breaths & more since you were born', live:true},
+  {id:'planetweight',icon:'🪐', name:'If Earth Was...',         desc:'Your weight on every planet & moon in the solar system', live:true},
+  {id:'agemars',    icon:'🔴', name:'Age on Mars',             desc:'Your age in Martian years, sols & more',                live:true},
+  {id:'moonphase',  icon:'🌙', name:'Moon Phase Calculator',    desc:'Tonight\'s moon phase, or any date you pick',           live:true},
+  {id:'whatif',     icon:'🤔', name:'What If Calculators',      desc:'₹1/second, invest-at-10, never-sleep & more',           live:true}
+];
+function renderFun(){
+  appEl.innerHTML=`<div class='page-wrap'>
+    <div class='back-row'><button class='back-btn' onclick="go('home')">← Back</button></div>
+    <div class='page-header'>
+      <div>
+        <div class='section-label'>🎉 Fun</div>
+        <h2>Fun & Curious Things</h2>
+      </div>
+    </div>
+    <div style='position:relative;margin-bottom:16px'>
+      <span style='position:absolute;left:16px;top:50%;transform:translateY(-50%);font-size:16px;pointer-events:none'>🔍</span>
+      <input class='ks-input' id='funSearch' placeholder='Search fun tools...' oninput='filterFun(this.value)' style='padding-left:44px;'>
+    </div>
+    <div class='apps-grid' id='funGrid'>
+      ${FUN_TOOLS.map(t=>`
+      <div class='app-card' onclick="${t.live?`go('${t.id}')`:''}" style="${t.live?'':'opacity:.6;cursor:default;'}" data-name='${t.name.toLowerCase()}' data-desc='${t.desc.toLowerCase()}'>
+        <div class='app-card-left'>
+          <div class='app-icon'>${t.icon}</div>
+          <div>
+            <div class='app-name'>${t.name}${t.live?'':' <span style="font-size:11px;color:var(--muted);font-weight:600;">(Coming soon)</span>'}</div>
+            <div class='app-desc'>${t.desc}</div>
+          </div>
+        </div>
+        <div class='app-arrow'>${t.live?'→':''}</div>
+      </div>`).join('')}
+    </div>
+    <div id='noFunMsg' style='display:none;text-align:center;padding:32px;color:var(--muted);font-size:14px'>😕 No tools found.</div>
+  </div>`;
+}
+function filterFun(query){
+  const q=query.toLowerCase().trim();
+  const cards=document.querySelectorAll('#funGrid .app-card');
+  let visible=0;
+  cards.forEach(card=>{
+    const match=!q||card.dataset.name.includes(q)||card.dataset.desc.includes(q);
+    card.style.display=match?'':'none';
+    if(match) visible++;
+  });
+  const msg=document.getElementById('noFunMsg');
+  if(msg) msg.style.display=visible===0?'block':'none';
+}
+
+/* ── LIFE IN NUMBERS ── */
+function animateLifestatValue(el, target, decimals){
+  const duration=1100;
+  const start=performance.now();
+  function frame(now){
+    const t=Math.min((now-start)/duration,1);
+    const eased=1-Math.pow(1-t,3);
+    const val=target*eased;
+    el.textContent=decimals?val.toFixed(decimals):Math.floor(val).toLocaleString();
+    if(t<1) requestAnimationFrame(frame);
+    else el.textContent=decimals?target.toFixed(decimals):Math.floor(target).toLocaleString();
+  }
+  requestAnimationFrame(frame);
+}
+function renderLifeStats(){
+  appEl.innerHTML=`<div class='page-wrap'>
+    <div class='back-row'><button class='back-btn' onclick="go('fun')">← Fun</button></div>
+    <div class='inner-card'>
+      <h2>💫 Life in Numbers</h2>
+      <p style='color:var(--muted);font-size:13.5px;margin-bottom:18px;'>See your existence from a different angle — how many times your heart has beaten, how far your steps could've taken you, and more.</p>
+      <div class='cycle-form'>
+        <div>
+          <label>Date of birth</label>
+          <input type='date' class='ks-input' id='lsDob' max='${new Date().toISOString().slice(0,10)}'>
+        </div>
+        <div style='display:flex;gap:12px;'>
+          <div style='flex:1;' id='lsHeightWrap'></div>
+          <div style='flex:1;' id='lsWeightWrap'></div>
+        </div>
+        <button class='btn btn-primary' onclick='calcLifeStats()'>✨ Calculate</button>
+        <div id='lsError' style='display:none;color:#E5484D;font-size:13px;text-align:center;'></div>
+      </div>
+      <div id='lsResults'></div>
+    </div>
+  </div>
+  ${appFooter('lifestats')}`;
+  renderLsUnitInputs();
+}
+var lsHeightUnit='cm', lsWeightUnit='kg';
+function lsToggleHeightUnit(u){ lsHeightUnit=u; renderLsUnitInputs(); }
+function lsToggleWeightUnit(u){ lsWeightUnit=u; renderLsUnitInputs(); }
+function renderLsUnitInputs(){
+  const hWrap=document.getElementById('lsHeightWrap');
+  const wWrap=document.getElementById('lsWeightWrap');
+  if(hWrap){
+    hWrap.innerHTML = '<label>Height <span class="unit-chip-row">'
+      +'<button type="button" class="unit-chip'+(lsHeightUnit==='cm'?' active':'')+'" onclick="lsToggleHeightUnit(\'cm\')">cm</button>'
+      +'<button type="button" class="unit-chip'+(lsHeightUnit==='ftin'?' active':'')+'" onclick="lsToggleHeightUnit(\'ftin\')">ft/in</button>'
+      +'</span></label>'
+      + (lsHeightUnit==='cm'
+        ? "<input type='number' class='ks-input' id='lsHeight' placeholder='e.g. 170' min='50' max='250'>"
+        : "<div style='display:flex;gap:8px;'><input type='number' class='ks-input' id='lsHeightFt' placeholder='ft' min='1' max='8'><input type='number' class='ks-input' id='lsHeightIn' placeholder='in' min='0' max='11'></div>");
+  }
+  if(wWrap){
+    wWrap.innerHTML = '<label>Weight <span class="unit-chip-row">'
+      +'<button type="button" class="unit-chip'+(lsWeightUnit==='kg'?' active':'')+'" onclick="lsToggleWeightUnit(\'kg\')">kg</button>'
+      +'<button type="button" class="unit-chip'+(lsWeightUnit==='lb'?' active':'')+'" onclick="lsToggleWeightUnit(\'lb\')">lb</button>'
+      +'</span></label>'
+      + (lsWeightUnit==='kg'
+        ? "<input type='number' class='ks-input' id='lsWeight' placeholder='e.g. 65' min='20' max='300'>"
+        : "<input type='number' class='ks-input' id='lsWeight' placeholder='e.g. 143' min='44' max='660'>");
+  }
+}
+function lsGetHeightCm(){
+  if(lsHeightUnit==='cm'){ return parseFloat(document.getElementById('lsHeight').value); }
+  const ft=parseFloat(document.getElementById('lsHeightFt').value)||0;
+  const inch=parseFloat(document.getElementById('lsHeightIn').value)||0;
+  if(!ft&&!inch) return NaN;
+  return (ft*12+inch)*2.54;
+}
+function lsGetWeightKg(){
+  const v=parseFloat(document.getElementById('lsWeight').value);
+  if(isNaN(v)) return NaN;
+  return lsWeightUnit==='lb' ? v*0.453592 : v;
+}
+function computeLifeStats(dob, height, weight, now){
+  const ms=now-dob;
+  const totalSeconds=ms/1000;
+  const totalMinutes=totalSeconds/60;
+  const totalDays=totalSeconds/86400;
+  const totalYears=totalDays/365.25;
+  const awakeMinutes=totalDays*16*60; // assumes ~16 waking hours/day
+
+  const heartbeats=totalMinutes*72;                 // ~72 bpm resting average
+  const breaths=totalMinutes*16;                     // ~16 breaths/min average
+  const blinks=awakeMinutes*17;                       // ~17 blinks/min while awake
+  const sleepDays=totalDays*(8/24);                   // ~8h sleep/day average
+  const hairCm=totalYears*15;                         // ~15cm/year average scalp growth
+  const nailCm=totalYears*4.2;                        // ~4.2cm/year average
+  const dailySteps=7500, strideM=0.75;
+  const totalDistanceKm=(totalDays*dailySteps*strideM)/1000;
+  const earthLaps=totalDistanceKm/40075;               // Earth's circumference
+  const moonTrips=totalDistanceKm/384400;              // one-way distance to the Moon
+  const bmrAvg=Math.max(0,(10*weight)+(6.25*height)-(5*totalYears)-78); // avg of male/female Mifflin-St Jeor
+  const totalCalories=bmrAvg*totalDays;
+
+  return {totalDays,totalYears,heartbeats,breaths,blinks,sleepDays,hairCm,nailCm,earthLaps,moonTrips,totalCalories};
+}
+var lsLiveTimer=null;
+var lsLiveInputs=null; // {dob,height,weight} once a calculation has been run
+function calcLifeStats(){
+  const dobStr=document.getElementById('lsDob').value;
+  const height=lsGetHeightCm();
+  const weight=lsGetWeightKg();
+  const errEl=document.getElementById('lsError');
+  const resultsEl=document.getElementById('lsResults');
+  errEl.style.display='none';
+  if(!dobStr){ errEl.textContent='Please enter your date of birth.'; errEl.style.display='block'; return; }
+  const dob=new Date(dobStr+'T00:00:00');
+  const now=new Date();
+  if(dob>now){ errEl.textContent='That date is in the future!'; errEl.style.display='block'; return; }
+  if(!height||height<50||height>250){ errEl.textContent='Please enter a valid height.'; errEl.style.display='block'; return; }
+  if(!weight||weight<20||weight>300){ errEl.textContent='Please enter a valid weight.'; errEl.style.display='block'; return; }
+
+  const s=computeLifeStats(dob,height,weight,now);
+
+  resultsEl.innerHTML=`
+    <div class='lifestat-hero' style='animation-delay:.05s;'>
+      <div class='big' id='lsHeroDays'>0</div>
+      <div class='cap'>days alive — that's ${s.totalYears.toFixed(1)} years <span class='lifestat-live-dot'></span> updating live</div>
+    </div>
+    <div class='lifestat-grid'>
+      <div class='lifestat-card' style='animation-delay:.10s;'>
+        <div class='lifestat-icon pulse'>❤️</div>
+        <div><div class='lifestat-value' id='lsHeartbeats'>0</div><div class='lifestat-label'>heartbeats</div></div>
+      </div>
+      <div class='lifestat-card' style='animation-delay:.15s;'>
+        <div class='lifestat-icon'>🌬️</div>
+        <div><div class='lifestat-value' id='lsBreaths'>0</div><div class='lifestat-label'>breaths taken</div></div>
+      </div>
+      <div class='lifestat-card' style='animation-delay:.20s;'>
+        <div class='lifestat-icon'>👁️</div>
+        <div><div class='lifestat-value' id='lsBlinks'>0</div><div class='lifestat-label'>blinks</div></div>
+      </div>
+      <div class='lifestat-card' style='animation-delay:.25s;'>
+        <div class='lifestat-icon'>😴</div>
+        <div><div class='lifestat-value' id='lsSleep'>0<span class='unit'>days</span></div><div class='lifestat-label'>spent asleep</div></div>
+      </div>
+      <div class='lifestat-card' style='animation-delay:.30s;'>
+        <div class='lifestat-icon'>💇</div>
+        <div><div class='lifestat-value' id='lsHair'>0<span class='unit'>cm</span></div><div class='lifestat-label'>hair grown (avg)</div></div>
+      </div>
+      <div class='lifestat-card' style='animation-delay:.35s;'>
+        <div class='lifestat-icon'>💅</div>
+        <div><div class='lifestat-value' id='lsNails'>0<span class='unit'>cm</span></div><div class='lifestat-label'>nail grown (avg)</div></div>
+      </div>
+      <div class='lifestat-card' style='animation-delay:.40s;'>
+        <div class='lifestat-icon'>🌍</div>
+        <div><div class='lifestat-value' id='lsEarth'>0<span class='unit'>laps</span></div><div class='lifestat-label'>around Earth, walking</div></div>
+      </div>
+      <div class='lifestat-card' style='animation-delay:.45s;'>
+        <div class='lifestat-icon'>🌕</div>
+        <div><div class='lifestat-value' id='lsMoon'>0<span class='unit'>trips</span></div><div class='lifestat-label'>to the Moon, walking</div></div>
+      </div>
+      <div class='lifestat-card' style='animation-delay:.50s;grid-column:1/-1;'>
+        <div class='lifestat-icon'>🔥</div>
+        <div><div class='lifestat-value' id='lsCalories'>0<span class='unit'>kcal</span></div><div class='lifestat-label'>burnt just existing (resting metabolism)</div></div>
+      </div>
+    </div>
+    <div class='lifestat-note'>Based on population-average rates (resting heart rate, breathing, blinking, hair/nail growth, walking pace) — a fun estimate of your existence, not a medical or biometric measurement of you specifically. Numbers tick upward live while you're on this page.</div>
+  `;
+
+  animateLifestatValue(document.getElementById('lsHeroDays'), s.totalDays, 0);
+  animateLifestatValue(document.getElementById('lsHeartbeats'), s.heartbeats, 0);
+  animateLifestatValue(document.getElementById('lsBreaths'), s.breaths, 0);
+  animateLifestatValue(document.getElementById('lsBlinks'), s.blinks, 0);
+  const lsSleepEl=document.getElementById('lsSleep');
+  animateLifestatValue({set textContent(v){lsSleepEl.innerHTML=v+"<span class='unit'>days</span>";}}, s.sleepDays, 1);
+  const lsHairEl=document.getElementById('lsHair');
+  animateLifestatValue({set textContent(v){lsHairEl.innerHTML=v+"<span class='unit'>cm</span>";}}, s.hairCm, 1);
+  const lsNailsEl=document.getElementById('lsNails');
+  animateLifestatValue({set textContent(v){lsNailsEl.innerHTML=v+"<span class='unit'>cm</span>";}}, s.nailCm, 1);
+  const lsEarthEl=document.getElementById('lsEarth');
+  animateLifestatValue({set textContent(v){lsEarthEl.innerHTML=v+"<span class='unit'>laps</span>";}}, s.earthLaps, 1);
+  const lsMoonEl=document.getElementById('lsMoon');
+  animateLifestatValue({set textContent(v){lsMoonEl.innerHTML=v+"<span class='unit'>trips</span>";}}, s.moonTrips, 1);
+  const lsCalEl=document.getElementById('lsCalories');
+  animateLifestatValue({set textContent(v){lsCalEl.innerHTML=v+"<span class='unit'>kcal</span>";}}, s.totalCalories, 0);
+
+  resultsEl.scrollIntoView({behavior:'smooth',block:'nearest'});
+
+  // Start (or restart) the live-updating ticker for this birthdate — recalculates
+  // and refreshes every second, no animation, just a quiet live number update. (added)
+  lsLiveInputs={dob,height,weight};
+  stopLifeStatsLive();
+  lsLiveTimer=setInterval(tickLifeStatsLive, 1000);
+}
+function tickLifeStatsLive(){
+  if(!lsLiveInputs) return;
+  const heroEl=document.getElementById('lsHeroDays');
+  if(!heroEl){ stopLifeStatsLive(); return; } // page navigated away without going through go()
+  const s=computeLifeStats(lsLiveInputs.dob, lsLiveInputs.height, lsLiveInputs.weight, new Date());
+  heroEl.textContent=Math.floor(s.totalDays).toLocaleString();
+  document.getElementById('lsHeartbeats').textContent=Math.floor(s.heartbeats).toLocaleString();
+  document.getElementById('lsBreaths').textContent=Math.floor(s.breaths).toLocaleString();
+  document.getElementById('lsBlinks').textContent=Math.floor(s.blinks).toLocaleString();
+  document.getElementById('lsSleep').innerHTML=s.sleepDays.toFixed(2)+"<span class='unit'>days</span>";
+  document.getElementById('lsHair').innerHTML=s.hairCm.toFixed(3)+"<span class='unit'>cm</span>";
+  document.getElementById('lsNails').innerHTML=s.nailCm.toFixed(3)+"<span class='unit'>cm</span>";
+  document.getElementById('lsEarth').innerHTML=s.earthLaps.toFixed(4)+"<span class='unit'>laps</span>";
+  document.getElementById('lsMoon').innerHTML=s.moonTrips.toFixed(4)+"<span class='unit'>trips</span>";
+  document.getElementById('lsCalories').innerHTML=Math.floor(s.totalCalories).toLocaleString()+"<span class='unit'>kcal</span>";
+}
+function stopLifeStatsLive(){
+  if(lsLiveTimer){ clearInterval(lsLiveTimer); lsLiveTimer=null; }
+}
+
+/* ── BREATHING EXERCISE ── */
+let breathInterval=null, breathPhase=0, breathCycle=0;
+const BREATH_MODES={
+  box:{name:'Box Breathing',phases:['Inhale','Hold','Exhale','Hold'],times:[4,4,4,4],color:'#3D52D5'},
+  '478':{name:'4-7-8 Breathing',phases:['Inhale','Hold','Exhale'],times:[4,7,8],color:'#a78bfa'},
+  deep:{name:'Deep Breathing',phases:['Inhale','Exhale'],times:[5,5],color:'#4ade80'}
+};
+let breathMode='box';
+/* helper: update button states */
+function setHealthBtns(startId, pauseId, resumeId, resetId, state){
+  const s=document.getElementById(startId);
+  const p=pauseId?document.getElementById(pauseId):null;
+  const r=resumeId?document.getElementById(resumeId):null;
+  const rs=resetId?document.getElementById(resetId):null;
+  // state: 'idle' | 'running' | 'paused'
+  if(state==='idle'){
+    if(s){s.className='btn btn-primary';s.disabled=false;}
+    if(p){p.style.display='none';}
+    if(r){r.style.display='none';}
+    if(rs){rs.style.display='';}
+  } else if(state==='running'){
+    if(s){s.className='btn btn-running';s.disabled=true;}
+    if(p){p.style.display='';}
+    if(r){r.style.display='none';}
+    if(rs){rs.style.display='';}
+  } else if(state==='paused'){
+    if(s){s.className='btn btn-paused';s.disabled=true;}
+    if(p){p.style.display='none';}
+    if(r){r.style.display='';}
+    if(rs){rs.style.display='';}
+  }
+}
+
+/* ── BREATHING EXERCISE ── */
+function renderBreath(){
+  appEl.innerHTML=`<div class='page-wrap'>
+    <div class='back-row'><button class='back-btn' onclick="go('health')">← Health</button></div>
+    <div class='inner-card'>
+      <h2>🌬️ Breathing Exercise</h2>
+      <p class='subtitle'>Follow the guide to calm your mind and body.</p>
+      <div style='display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px'>
+        <button class='calc-tab active' onclick='setBreathMode("box",this)'>📦 Box (4-4-4-4)</button>
+        <button class='calc-tab' onclick='setBreathMode("478",this)'>✨ 4-7-8</button>
+        <button class='calc-tab' onclick='setBreathMode("deep",this)'>🍃 Deep (5-5)</button>
+      </div>
+      <div id='breathCircleWrap' style='display:flex;flex-direction:column;align-items:center;padding:20px 0'>
+        <div id='breathCircle' style='
+          width:180px;height:180px;border-radius:50%;
+          background:radial-gradient(circle,#1a2a4a,#0a0c14);
+          border:3px solid #3D52D5;
+          display:flex;flex-direction:column;align-items:center;justify-content:center;
+          transition:transform 4s ease-in-out, border-color 1s, box-shadow 1s;
+          box-shadow:0 0 30px rgba(61,82,213,0.3);
+          margin-bottom:16px;
+        '>
+          <div id='breathPhaseLabel' style='font-family:Syne,sans-serif;font-weight:800;font-size:1.1rem;color:#fff'>Ready</div>
+          <div id='breathCount' style='font-family:Rajdhani,sans-serif;font-size:2.5rem;font-weight:700;color:#3D52D5;line-height:1'>–</div>
+        </div>
+        <div id='breathCycleInfo' style='font-size:13px;color:var(--muted);margin-bottom:16px'>Cycle: <span id='breathCycleNum' style='color:var(--accent);font-weight:700'>0</span></div>
+        <div style='display:flex;gap:10px;flex-wrap:wrap;justify-content:center'>
+          <button class='btn btn-primary' id='breathStartBtn' onclick='startBreath()'>▶ Start</button>
+          <button class='btn btn-secondary' id='breathPauseBtn' style='display:none' onclick='pauseBreath()'>⏸ Pause</button>
+          <button class='btn btn-primary' id='breathResumeBtn' style='display:none' onclick='resumeBreath()'>▶ Resume</button>
+          <button class='btn btn-ghost' id='breathResetBtn' onclick='resetBreath()'>↺ Reset</button>
+        </div>
+      </div>
+      <div class='result-box' style='text-align:center'>
+        <p>💡 <strong>Tip:</strong> Breathe through your nose during inhale and exhale slowly through your mouth. Regular practice reduces stress and improves focus.</p>
+      </div>
+    </div>
+  </div>`;
+}
+function setBreathMode(mode, btn){
+  breathMode=mode;
+  resetBreath();
+  document.querySelectorAll('.calc-tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+}
+function startBreath(){
+  clearInterval(breathInterval);
+  breathPhase=0; breathCycle=0;
+  const cycleEl=document.getElementById('breathCycleNum');
+  if(cycleEl) cycleEl.textContent='0';
+  setHealthBtns('breathStartBtn','breathPauseBtn','breathResumeBtn','breathResetBtn','running');
+  runBreathPhase();
+}
+let breathPausedPhaseTime=0;
+function pauseBreath(){
+  clearInterval(breathInterval);
+  breathInterval=null;
+  setHealthBtns('breathStartBtn','breathPauseBtn','breathResumeBtn','breathResetBtn','paused');
+  const lbl=document.getElementById('breathPhaseLabel');
+  if(lbl) lbl.textContent='Paused';
+}
+function resumeBreath(){
+  setHealthBtns('breathStartBtn','breathPauseBtn','breathResumeBtn','breathResetBtn','running');
+  runBreathPhase();
+}
+function resetBreath(){
+  clearInterval(breathInterval); breathInterval=null;
+  breathPhase=0; breathCycle=0;
+  const circle=document.getElementById('breathCircle');
+  if(circle){circle.style.transform='scale(1)';circle.style.borderColor='#3D52D5';circle.style.boxShadow='0 0 30px rgba(61,82,213,0.3)';}
+  const lbl=document.getElementById('breathPhaseLabel');
+  const cnt=document.getElementById('breathCount');
+  const cycleEl=document.getElementById('breathCycleNum');
+  if(lbl) lbl.textContent='Ready';
+  if(cnt) cnt.textContent='–';
+  if(cycleEl) cycleEl.textContent='0';
+  setHealthBtns('breathStartBtn','breathPauseBtn','breathResumeBtn','breathResetBtn','idle');
+}
+function runBreathPhase(){
+  const m=BREATH_MODES[breathMode];
+  const phase=m.phases[breathPhase];
+  const time=m.times[breathPhase];
+  const circle=document.getElementById('breathCircle');
+  const lbl=document.getElementById('breathPhaseLabel');
+  const cnt=document.getElementById('breathCount');
+  const cycleEl=document.getElementById('breathCycleNum');
+  if(!circle) return;
+  lbl.textContent=phase;
+  circle.style.borderColor=m.color;
+  circle.style.boxShadow=`0 0 40px ${m.color}66`;
+  if(phase==='Inhale') circle.style.transform='scale(1.38)';
+  else if(phase==='Exhale') circle.style.transform='scale(1)';
+  let t=time;
+  cnt.textContent=t;
+  breathInterval=setInterval(()=>{
+    t--;
+    cnt.textContent=t;
+    if(t<=0){
+      clearInterval(breathInterval);
+      breathPhase=(breathPhase+1)%m.phases.length;
+      if(breathPhase===0){ breathCycle++; if(cycleEl) cycleEl.textContent=breathCycle; }
+      runBreathPhase();
+    }
+  },1000);
+}
+
+/* ── LUNG HOLD (Breath Hold Test) ── */
+let lungTimer=null, lungSeconds=0, lungRunning=false;
+let lungPaused=false;
+function renderLungHold(){
+  appEl.innerHTML=`<div class='page-wrap'>
+    <div class='back-row'><button class='back-btn' onclick="go('health')">← Health</button></div>
+    <div class='inner-card'>
+      <h2>🫁 Lung Capacity Test</h2>
+      <p class='subtitle'>Take a deep breath, press Start, then Stop when you can't hold anymore.</p>
+      <div style='text-align:center;padding:30px 0'>
+        <div id='lungDisplay' style='font-family:Rajdhani,sans-serif;font-size:5rem;font-weight:700;color:var(--accent);line-height:1;margin-bottom:8px;'>0.0s</div>
+        <div id='lungStatus' style='font-size:14px;color:var(--muted);margin-bottom:24px'>Press Start when ready</div>
+        <div style='display:flex;gap:10px;justify-content:center;flex-wrap:wrap'>
+          <button class='btn btn-primary' id='lungStartBtn' onclick='startLung()'>🫁 Start</button>
+          <button class='btn btn-secondary' id='lungPauseBtn' style='display:none' onclick='pauseLung()'>⏸ Pause</button>
+          <button class='btn btn-primary' id='lungResumeBtn' style='display:none;font-size:13px;padding:10px 16px' onclick='resumeLung()'>▶ Resume</button>
+          <button class='btn btn-secondary' id='lungStopBtn' style='display:none' onclick='stopLung()'>⏹ Done</button>
+          <button class='btn btn-ghost' onclick='resetLung()'>↺ Reset</button>
+        </div>
+        <div id='lungResult' style='margin-top:24px'></div>
+      </div>
+      <div class='result-box' style='margin-top:0'>
+        <p style='font-weight:600;color:var(--text);margin-bottom:8px'>📊 Average Hold Times:</p>
+        <p>Untrained: <strong style='color:#f87171'>20–40s</strong> &nbsp;|&nbsp; Average: <strong style='color:#fbbf24'>40–60s</strong> &nbsp;|&nbsp; Good: <strong style='color:#4ade80'>60–90s</strong> &nbsp;|&nbsp; Excellent: <strong style='color:#a78bfa'>&gt;90s</strong></p>
+      </div>
+    </div>
+  </div>`;
+}
+function startLung(){
+  if(lungRunning) return;
+  lungRunning=true; lungPaused=false; lungSeconds=0;
+  document.getElementById('lungStatus').textContent='Hold your breath now... 🫁';
+  document.getElementById('lungResult').innerHTML='';
+  setHealthBtns('lungStartBtn','lungPauseBtn',null,null,'running');
+  document.getElementById('lungStopBtn').style.display='';
+  lungTimer=setInterval(()=>{
+    lungSeconds+=0.1;
+    const el=document.getElementById('lungDisplay');
+    if(el) el.textContent=lungSeconds.toFixed(1)+'s';
+  },100);
+}
+function pauseLung(){
+  clearInterval(lungTimer); lungRunning=false; lungPaused=true;
+  const p=document.getElementById('lungPauseBtn');
+  const r=document.getElementById('lungResumeBtn');
+  const s=document.getElementById('lungStartBtn');
+  if(p) p.style.display='none';
+  if(r) r.style.display='';
+  if(s){s.className='btn btn-paused';s.disabled=true;}
+  const st=document.getElementById('lungStatus');
+  if(st) st.textContent='Paused — press Resume to continue';
+}
+function resumeLung(){
+  lungRunning=true; lungPaused=false;
+  const p=document.getElementById('lungPauseBtn');
+  const r=document.getElementById('lungResumeBtn');
+  const s=document.getElementById('lungStartBtn');
+  if(p) p.style.display='';
+  if(r) r.style.display='none';
+  if(s){s.className='btn btn-running';s.disabled=true;}
+  const st=document.getElementById('lungStatus');
+  if(st) st.textContent='Hold your breath now... 🫁';
+  lungTimer=setInterval(()=>{
+    lungSeconds+=0.1;
+    const el=document.getElementById('lungDisplay');
+    if(el) el.textContent=lungSeconds.toFixed(1)+'s';
+  },100);
+}
+function stopLung(){
+  clearInterval(lungTimer); lungRunning=false; lungPaused=false;
+  setHealthBtns('lungStartBtn','lungPauseBtn',null,null,'idle');
+  const resumeBtn=document.getElementById('lungResumeBtn');
+  const stopBtn=document.getElementById('lungStopBtn');
+  if(resumeBtn) resumeBtn.style.display='none';
+  if(stopBtn) stopBtn.style.display='none';
+  const s=lungSeconds;
+  let rating,color;
+  if(s<20){rating='Keep practicing 💪';color='#f87171';}
+  else if(s<40){rating='Untrained range';color='#f87171';}
+  else if(s<60){rating='Average 👍';color='#fbbf24';}
+  else if(s<90){rating='Good! 🌟';color='#4ade80';}
+  else{rating='Excellent! 🏆';color='#a78bfa';}
+  document.getElementById('lungStatus').textContent='Done!';
+  document.getElementById('lungResult').innerHTML=`
+    <div class='result-box' style='text-align:center'>
+      <p>Your hold time</p>
+      <strong style='color:${color};font-size:2rem'>${s.toFixed(1)}s</strong>
+      <div style='margin-top:8px;font-size:14px;color:${color};font-weight:600'>${rating}</div>
+    </div>`;
+}
+function resetLung(){
+  clearInterval(lungTimer); lungRunning=false; lungPaused=false; lungSeconds=0;
+  const d=document.getElementById('lungDisplay');
+  const st=document.getElementById('lungStatus');
+  const r=document.getElementById('lungResult');
+  const resumeBtn=document.getElementById('lungResumeBtn');
+  const stopBtn=document.getElementById('lungStopBtn');
+  if(d) d.textContent='0.0s';
+  if(st) st.textContent='Press Start when ready';
+  if(r) r.innerHTML='';
+  if(resumeBtn) resumeBtn.style.display='none';
+  if(stopBtn) stopBtn.style.display='none';
+  setHealthBtns('lungStartBtn','lungPauseBtn',null,null,'idle');
+}
+
+/* ── BREATH RATE COUNTER ── */
+let brTimer=null, brBreaths=0, brSeconds=0, brRunning=false, brPaused=false, brSavedSeconds=0;
+function renderBreathRate(){
+  appEl.innerHTML=`<div class='page-wrap'>
+    <div class='back-row'><button class='back-btn' onclick="go('health')">← Health</button></div>
+    <div class='inner-card'>
+      <h2>📊 Breath Rate Counter</h2>
+      <p class='subtitle'>Press Start, then tap the big button each time you inhale for 60 seconds.</p>
+      <div style='text-align:center;padding:20px 0'>
+        <div style='display:flex;justify-content:center;gap:40px;margin-bottom:24px'>
+          <div>
+            <div style='font-size:11px;color:var(--muted);letter-spacing:1px;text-transform:uppercase'>Breaths</div>
+            <div id='brBreathsEl' style='font-family:Rajdhani,sans-serif;font-size:3.5rem;font-weight:700;color:var(--accent)'>0</div>
+          </div>
+          <div>
+            <div style='font-size:11px;color:var(--muted);letter-spacing:1px;text-transform:uppercase'>Time Left</div>
+            <div id='brTimerEl' style='font-family:Rajdhani,sans-serif;font-size:3.5rem;font-weight:700;color:#a78bfa'>60</div>
+          </div>
+        </div>
+        <button id='brTapBtn' onclick='brTap()' class='tap-btn-idle' style='
+          width:150px;height:150px;border-radius:50%;
+          background:linear-gradient(135deg,#f87171,#ef4444);
+          border:3px solid transparent;
+          cursor:pointer;font-size:1.1rem;
+          transition:transform .1s, opacity .3s;
+          color:#fff;font-weight:800;
+          font-family:DM Sans,sans-serif;
+          display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
+          margin:0 auto;
+        ' onmousedown='this.style.transform="scale(.92)"' onmouseup='this.style.transform="scale(1)"' ontouchstart='this.style.transform="scale(.92)"' ontouchend='this.style.transform="scale(1)"'>
+          <span style='font-size:2rem'>🌬️</span>
+          <span>Inhale</span>
+        </button>
+        <div id='brHint' style='margin-top:10px;font-size:13px;color:var(--muted)'>Press Start first</div>
+        <div style='display:flex;gap:10px;justify-content:center;margin-top:20px;flex-wrap:wrap'>
+          <button class='btn btn-primary' id='brStartBtn' onclick='brStart()'>▶ Start</button>
+          <button class='btn btn-secondary' id='brPauseBtn' style='display:none' onclick='brPause()'>⏸ Pause</button>
+          <button class='btn btn-primary' id='brResumeBtn' style='display:none;font-size:13px;padding:10px 16px' onclick='brResume()'>▶ Resume</button>
+          <button class='btn btn-ghost' id='brResetBtn' onclick='brReset()'>↺ Reset</button>
+        </div>
+        <div id='brResult' style='margin-top:20px'></div>
+      </div>
+      <div class='result-box'>
+        <p>Normal adult breathing rate: <strong style='color:#4ade80'>12–20 breaths/min</strong></p>
+      </div>
+    </div>
+  </div>`;
+}
+function brActivateTap(){
+  const tapBtn=document.getElementById('brTapBtn');
+  if(tapBtn){tapBtn.classList.remove('tap-btn-idle');tapBtn.classList.add('tap-btn-active');tapBtn.style.opacity='1';tapBtn.style.borderColor='#f87171';}
+}
+function brDeactivateTap(){
+  const tapBtn=document.getElementById('brTapBtn');
+  if(tapBtn){tapBtn.classList.remove('tap-btn-active');tapBtn.classList.add('tap-btn-idle');}
+}
+function brRunTimer(){
+  brTimer=setInterval(()=>{
+    brSeconds--;
+    const el=document.getElementById('brTimerEl');
+    if(el) el.textContent=brSeconds;
+    if(brSeconds<=0){
+      clearInterval(brTimer); brRunning=false;
+      brDeactivateTap();
+      setHealthBtns('brStartBtn','brPauseBtn',null,null,'idle');
+      document.getElementById('brResumeBtn').style.display='none';
+      const hint=document.getElementById('brHint');
+      if(hint) hint.textContent='Done!';
+      let rating,color;
+      if(brBreaths<12){rating='Below normal – try to relax';color='#f87171';}
+      else if(brBreaths<=20){rating='Normal ✅';color='#4ade80';}
+      else{rating='Above normal – try to slow down';color='#fbbf24';}
+      const r=document.getElementById('brResult');
+      if(r) r.innerHTML=`<div class='result-box' style='text-align:center'>
+        <p>Your breathing rate</p>
+        <strong style='font-size:2rem;color:${color}'>${brBreaths} breaths/min</strong>
+        <div style='margin-top:8px;font-size:14px;color:${color};font-weight:600'>${rating}</div>
+      </div>`;
+    }
+  },1000);
+}
+function brStart(){
+  if(brRunning) return;
+  brRunning=true; brPaused=false; brBreaths=0; brSeconds=60;
+  document.getElementById('brBreathsEl').textContent='0';
+  document.getElementById('brTimerEl').textContent='60';
+  document.getElementById('brResult').innerHTML='';
+  brActivateTap();
+  const hint=document.getElementById('brHint');
+  if(hint) hint.textContent='👆 Tap every time you inhale!';
+  setHealthBtns('brStartBtn','brPauseBtn',null,null,'running');
+  brRunTimer();
+}
+function brPause(){
+  clearInterval(brTimer); brRunning=false; brPaused=true;
+  brDeactivateTap();
+  const pauseBtn=document.getElementById('brPauseBtn');
+  const resumeBtn=document.getElementById('brResumeBtn');
+  const startBtn=document.getElementById('brStartBtn');
+  if(pauseBtn) pauseBtn.style.display='none';
+  if(resumeBtn) resumeBtn.style.display='';
+  if(startBtn){startBtn.className='btn btn-paused';startBtn.disabled=true;}
+  const hint=document.getElementById('brHint');
+  if(hint) hint.textContent='Paused — press Resume to continue';
+}
+function brResume(){
+  brRunning=true; brPaused=false;
+  brActivateTap();
+  const pauseBtn=document.getElementById('brPauseBtn');
+  const resumeBtn=document.getElementById('brResumeBtn');
+  const startBtn=document.getElementById('brStartBtn');
+  if(pauseBtn) pauseBtn.style.display='';
+  if(resumeBtn) resumeBtn.style.display='none';
+  if(startBtn){startBtn.className='btn btn-running';startBtn.disabled=true;}
+  const hint=document.getElementById('brHint');
+  if(hint) hint.textContent='👆 Tap every time you inhale!';
+  brRunTimer();
+}
+function brTap(){
+  if(!brRunning) return;
+  brBreaths++;
+  const el=document.getElementById('brBreathsEl');
+  if(el) el.textContent=brBreaths;
+}
+function brReset(){
+  clearInterval(brTimer);
+  brRunning=false; brPaused=false; brBreaths=0; brSeconds=60;
+  brDeactivateTap();
+  setHealthBtns('brStartBtn','brPauseBtn',null,null,'idle');
+  const resumeBtn=document.getElementById('brResumeBtn');
+  if(resumeBtn) resumeBtn.style.display='none';
+  const b=document.getElementById('brBreathsEl');
+  const t=document.getElementById('brTimerEl');
+  const r=document.getElementById('brResult');
+  const hint=document.getElementById('brHint');
+  if(b) b.textContent='0';
+  if(t) t.textContent='60';
+  if(r) r.innerHTML='';
+  if(hint) hint.textContent='Press Start first';
+}
+
+/* ── HEART RATE MONITOR ── */
+let hrTaps=[];
+function renderHeartRate(){
+  appEl.innerHTML=`<div class='page-wrap'>
+    <div class='back-row'><button class='back-btn' onclick="go('health')">← Health</button></div>
+    <div class='inner-card'>
+      <h2>❤️ Heart Rate Monitor</h2>
+      <p class='subtitle'>Tap the heart each time you feel your pulse. Uses last 10 taps for accuracy.</p>
+      <div style='text-align:center;padding:20px 0'>
+        <div id='hrDisplay' style='font-family:Rajdhani,sans-serif;font-size:5rem;font-weight:700;color:#f87171;line-height:1'>--</div>
+        <div style='font-size:13px;color:var(--muted);margin-bottom:24px'>BPM (beats per minute)</div>
+        <button onclick='hrTap()' id='hrTapBtn' style='
+          width:150px;height:150px;border-radius:50%;
+          background:linear-gradient(135deg,#f87171,#ef4444);
+          border:none;cursor:pointer;font-size:2.5rem;
+          box-shadow:0 0 30px rgba(248,113,113,0.5);
+          transition:transform .1s;color:#fff;
+          display:flex;align-items:center;justify-content:center;
+          margin:0 auto;
+          animation:tapPulse 1.2s ease-in-out infinite;
+        ' onmousedown='this.style.transform="scale(.88)"' onmouseup='this.style.transform="scale(1)"' ontouchstart='this.style.transform="scale(.88)"' ontouchend='this.style.transform="scale(1)"'>
+          ❤️
+        </button>
+        <div id='hrTapCount' style='margin-top:14px;font-size:13px;color:var(--muted)'>Just tap — no start needed</div>
+        <button class='btn btn-ghost' style='margin-top:16px' onclick='hrReset()'>↺ Reset</button>
+        <div id='hrZone' style='margin-top:20px'></div>
+      </div>
+      <div class='result-box'>
+        <p><strong style='color:#4ade80'>Normal resting HR:</strong> 60–100 BPM &nbsp;|&nbsp; <strong style='color:#a78bfa'>Athletes:</strong> 40–60 BPM</p>
+      </div>
+    </div>
+  </div>`;
+}
+function hrTap(){
+  hrTaps.push(Date.now());
+  if(hrTaps.length>10) hrTaps.shift();
+  const el=document.getElementById('hrTapCount');
+  if(el) el.textContent=`${hrTaps.length} tap${hrTaps.length===1?'':'s'} recorded — keep going!`;
+  if(hrTaps.length>=2){
+    const intervals=[];
+    for(let i=1;i<hrTaps.length;i++) intervals.push(hrTaps[i]-hrTaps[i-1]);
+    const avgInterval=intervals.reduce((a,b)=>a+b,0)/intervals.length;
+    const bpm=Math.round(60000/avgInterval);
+    const d=document.getElementById('hrDisplay');
+    if(d) d.textContent=bpm;
+    let zone,color;
+    if(bpm<60){zone='Below normal';color='#60a5fa';}
+    else if(bpm<=100){zone='Normal resting ✅';color='#4ade80';}
+    else if(bpm<=140){zone='Moderate exercise';color='#fbbf24';}
+    else{zone='High intensity';color='#f87171';}
+    const z=document.getElementById('hrZone');
+    if(z) z.innerHTML=`<div style='font-size:14px;color:${color};font-weight:600'>${zone}</div>`;
+  }
+}
+function hrReset(){
+  hrTaps=[];
+  const d=document.getElementById('hrDisplay');
+  const t=document.getElementById('hrTapCount');
+  const z=document.getElementById('hrZone');
+  if(d) d.textContent='--';
+  if(t) t.textContent='Just tap — no start needed';
+  if(z) z.innerHTML='';
+}
+
+/* ── HEART RATE ZONES ── */
+function renderHeartZone(){
+  appEl.innerHTML=`<div class='page-wrap'>
+    <div class='back-row'><button class='back-btn' onclick="go('health')">← Health</button></div>
+    <div class='inner-card'>
+      <h2>🏃 Heart Rate Zones</h2>
+      <p class='subtitle'>Find your personalised training zones based on age and max heart rate.</p>
+      <label class='field-label'>Your Age</label>
+      <input class='ks-input' id='hzAge' type='number' placeholder='e.g. 25' min='10' max='100'>
+      <label class='field-label' style='margin-top:12px'>Max Heart Rate <span style='color:var(--sub);font-size:11px'>(leave blank to auto-calculate)</span></label>
+      <input class='ks-input' id='hzMax' type='number' placeholder='Auto: 220 − Age'>
+      <button class='btn btn-primary' style='margin-top:14px' onclick='calcHeartZones()'>💓 Calculate Zones</button>
+      <div id='hzResult' style='margin-top:16px'></div>
+    </div>
+  </div>`;
+}
+function calcHeartZones(){
+  const age=parseInt(document.getElementById('hzAge').value);
+  if(!age||age<10||age>100){alert('Enter a valid age between 10 and 100');return;}
+  const maxHR=parseInt(document.getElementById('hzMax').value)||220-age;
+  const zones=[
+    {name:'Zone 1 — Warm Up',    pct:'50–60%', min:Math.round(maxHR*0.50), max:Math.round(maxHR*0.60), color:'#60a5fa', desc:'Light activity, recovery'},
+    {name:'Zone 2 — Fat Burn',   pct:'60–70%', min:Math.round(maxHR*0.60), max:Math.round(maxHR*0.70), color:'#4ade80', desc:'Fat burning, endurance base'},
+    {name:'Zone 3 — Aerobic',    pct:'70–80%', min:Math.round(maxHR*0.70), max:Math.round(maxHR*0.80), color:'#fbbf24', desc:'Cardiovascular fitness'},
+    {name:'Zone 4 — Anaerobic',  pct:'80–90%', min:Math.round(maxHR*0.80), max:Math.round(maxHR*0.90), color:'#f97316', desc:'Speed & performance'},
+    {name:'Zone 5 — Max Effort', pct:'90–100%',min:Math.round(maxHR*0.90), max:maxHR,                  color:'#f87171', desc:'Maximum intensity, short bursts'}
+  ];
+  const el=document.getElementById('hzResult');
+  el.innerHTML=`
+    <div style='font-size:13px;color:var(--muted);margin-bottom:12px'>Max HR: <strong style='color:var(--accent)'>${maxHR} BPM</strong> (Age: ${age})</div>
+    ${zones.map(z=>`
+    <div style='background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:14px 16px;margin-bottom:8px;display:flex;align-items:center;gap:14px'>
+      <div style='width:4px;border-radius:4px;align-self:stretch;background:${z.color};flex-shrink:0'></div>
+      <div style='flex:1'>
+        <div style='font-weight:700;font-size:14px;color:${z.color}'>${z.name}</div>
+        <div style='font-size:12px;color:var(--muted)'>${z.desc}</div>
+      </div>
+      <div style='text-align:right;flex-shrink:0'>
+        <div style='font-family:Rajdhani,sans-serif;font-size:1.1rem;font-weight:700;color:var(--text)'>${z.min}–${z.max}</div>
+        <div style='font-size:11px;color:var(--muted)'>${z.pct} BPM</div>
+      </div>
+    </div>`).join('')}`;
+}
+
+/* ── STRESS RELIEF TIMER ── */
+let stressTimer=null, stressRunning=false, stressPaused=false;
+const STRESS_SCRIPT=[
+  {phase:'Breathe In',dur:4,msg:'Inhale slowly through your nose',color:'#4ade80'},
+  {phase:'Hold',dur:4,msg:'Hold gently — you are safe',color:'#a78bfa'},
+  {phase:'Breathe Out',dur:6,msg:'Exhale slowly, release all tension',color:'#60a5fa'},
+  {phase:'Pause',dur:2,msg:'You are calm. You are at peace.',color:'#fbbf24'},
+];
+let stressScriptIdx=0, stressSecondsLeft=0;
+function renderStress(){
+  appEl.innerHTML=`<div class='page-wrap'>
+    <div class='back-row'><button class='back-btn' onclick="go('health')">← Health</button></div>
+    <div class='inner-card'>
+      <h2>🧘 Stress Relief Timer</h2>
+      <p class='subtitle'>A guided session with breathing, pause and affirmation phases.</p>
+      <div style='text-align:center;padding:20px 0'>
+        <div id='stressCircle' style='
+          width:160px;height:160px;border-radius:50%;
+          background:radial-gradient(circle,#1a1a3a,#0a0c14);
+          border:3px solid #a78bfa;
+          display:flex;flex-direction:column;align-items:center;justify-content:center;
+          margin:0 auto 16px;
+          box-shadow:0 0 30px rgba(167,139,250,0.3);
+          transition:border-color .5s, box-shadow .5s;
+        '>
+          <div id='stressPhase' style='font-family:Syne,sans-serif;font-weight:800;font-size:0.95rem;color:#a78bfa'>Ready</div>
+          <div id='stressCount' style='font-family:Rajdhani,sans-serif;font-size:3rem;font-weight:700;color:#fff;line-height:1'>–</div>
+        </div>
+        <div id='stressMsg' style='font-size:14px;color:var(--muted);margin-bottom:16px;min-height:20px'>Take a comfortable seat and relax</div>
+        <div style='display:flex;gap:10px;justify-content:center;flex-wrap:wrap'>
+          <button class='btn btn-primary' id='stressStartBtn' onclick='startStress()'>🧘 Start Session</button>
+          <button class='btn btn-secondary' id='stressPauseBtn' style='display:none' onclick='pauseStress()'>⏸ Pause</button>
+          <button class='btn btn-primary' id='stressResumeBtn' style='display:none' onclick='resumeStress()'>▶ Resume</button>
+          <button class='btn btn-ghost' id='stressResetBtn' onclick='resetStress()'>↺ Reset</button>
+        </div>
+      </div>
+      <div class='result-box'>
+        <p>This session combines breathing, pausing and gentle affirmations to reduce stress. Best done daily. 🌿</p>
+      </div>
+    </div>
+  </div>`;
+}
+function startStress(){
+  clearInterval(stressTimer);
+  stressRunning=true; stressPaused=false; stressScriptIdx=0;
+  setHealthBtns('stressStartBtn','stressPauseBtn','stressResumeBtn','stressResetBtn','running');
+  runStressPhase();
+}
+function pauseStress(){
+  clearInterval(stressTimer);
+  stressPaused=true; stressRunning=false;
+  setHealthBtns('stressStartBtn','stressPauseBtn','stressResumeBtn','stressResetBtn','paused');
+  const phase=document.getElementById('stressPhase');
+  if(phase) phase.textContent='Paused';
+}
+function resumeStress(){
+  stressPaused=false; stressRunning=true;
+  setHealthBtns('stressStartBtn','stressPauseBtn','stressResumeBtn','stressResetBtn','running');
+  runStressPhase();
+}
+function resetStress(){
+  clearInterval(stressTimer);
+  stressRunning=false; stressPaused=false; stressScriptIdx=0;
+  setHealthBtns('stressStartBtn','stressPauseBtn','stressResumeBtn','stressResetBtn','idle');
+  const circle=document.getElementById('stressCircle');
+  if(circle){circle.style.borderColor='#a78bfa';circle.style.boxShadow='0 0 30px rgba(167,139,250,0.3)';}
+  const phase=document.getElementById('stressPhase');
+  const count=document.getElementById('stressCount');
+  const msg=document.getElementById('stressMsg');
+  if(phase) phase.textContent='Ready';
+  if(count) count.textContent='–';
+  if(msg) msg.textContent='Take a comfortable seat and relax';
+}
+function runStressPhase(){
+  if(!stressRunning) return;
+  const p=STRESS_SCRIPT[stressScriptIdx];
+  const circle=document.getElementById('stressCircle');
+  const phase=document.getElementById('stressPhase');
+  const count=document.getElementById('stressCount');
+  const msg=document.getElementById('stressMsg');
+  if(!circle) return;
+  if(phase) phase.textContent=p.phase;
+  if(msg) msg.textContent=p.msg;
+  circle.style.borderColor=p.color;
+  circle.style.boxShadow=`0 0 30px ${p.color}55`;
+  stressSecondsLeft=p.dur;
+  if(count) count.textContent=stressSecondsLeft+'s';
+  stressTimer=setInterval(()=>{
+    stressSecondsLeft--;
+    if(count) count.textContent=stressSecondsLeft+'s';
+    if(stressSecondsLeft<=0){
+      clearInterval(stressTimer);
+      stressScriptIdx=(stressScriptIdx+1)%STRESS_SCRIPT.length;
+      runStressPhase();
+    }
+  },1000);
+}
+
+/* ── 20-20-20 EYE TIMER ── */
+let eyeTimer=null, eyeSeconds=0, eyePhase='work', eyeRunning=false, eyePaused=false;
+function renderEyeTimer(){
+  appEl.innerHTML=`<div class='page-wrap'>
+    <div class='back-row'><button class='back-btn' onclick="go('health')">← Health</button></div>
+    <div class='inner-card'>
+      <h2>👁️ 20-20-20 Eye Timer</h2>
+      <p class='subtitle'>Every 20 minutes, look at something 20 feet away for 20 seconds. Reduces digital eye strain.</p>
+      <div style='text-align:center;padding:20px 0'>
+        <div id='eyeDisplay' style='font-family:Rajdhani,sans-serif;font-size:5rem;font-weight:700;color:var(--accent);line-height:1'>20:00</div>
+        <div id='eyePhaseLabel' style='font-size:14px;color:var(--muted);margin:8px 0 24px'>20 min work session</div>
+        <div style='display:flex;gap:10px;justify-content:center;flex-wrap:wrap'>
+          <button class='btn btn-primary' id='eyeStartBtn' onclick='startEye()'>👁️ Start Timer</button>
+          <button class='btn btn-secondary' id='eyePauseBtn' style='display:none' onclick='pauseEye()'>⏸ Pause</button>
+          <button class='btn btn-primary' id='eyeResumeBtn' style='display:none' onclick='resumeEye()'>▶ Resume</button>
+          <button class='btn btn-ghost' id='eyeResetBtn' onclick='resetEye()'>↺ Reset</button>
+        </div>
+        <div id='eyeMsg' style='margin-top:16px;font-size:14px;color:var(--muted);min-height:20px'></div>
+      </div>
+      <div class='result-box'>
+        <p><strong style='color:var(--accent)'>The 20-20-20 Rule:</strong> For every 20 minutes of screen time, look at something 20 feet (6 meters) away for 20 seconds. This relaxes eye muscles and prevents strain.</p>
+      </div>
+    </div>
+  </div>`;
+}
+function startEye(){
+  if(eyeRunning) return;
+  eyeRunning=true; eyePaused=false;
+  eyePhase='work'; eyeSeconds=20*60;
+  updateEyeDisplay();
+  setHealthBtns('eyeStartBtn','eyePauseBtn','eyeResumeBtn','eyeResetBtn','running');
+  runEyeTimer();
+}
+function pauseEye(){
+  clearInterval(eyeTimer);
+  eyeRunning=false; eyePaused=true;
+  setHealthBtns('eyeStartBtn','eyePauseBtn','eyeResumeBtn','eyeResetBtn','paused');
+}
+function resumeEye(){
+  eyeRunning=true; eyePaused=false;
+  setHealthBtns('eyeStartBtn','eyePauseBtn','eyeResumeBtn','eyeResetBtn','running');
+  runEyeTimer();
+}
+function runEyeTimer(){
+  eyeTimer=setInterval(()=>{
+    eyeSeconds--;
+    updateEyeDisplay();
+    if(eyeSeconds<=0){
+      clearInterval(eyeTimer);
+      if(eyePhase==='work'){
+        eyePhase='rest'; eyeSeconds=20;
+        const lbl=document.getElementById('eyePhaseLabel');
+        const msg=document.getElementById('eyeMsg');
+        const d=document.getElementById('eyeDisplay');
+        if(lbl) lbl.textContent='👁️ REST — Look 20 feet away!';
+        if(msg) msg.textContent='🔔 Time to rest your eyes!';
+        if(d) d.style.color='#4ade80';
+        runEyeTimer();
+      } else {
+        eyePhase='work'; eyeSeconds=20*60;
+        const lbl=document.getElementById('eyePhaseLabel');
+        const msg=document.getElementById('eyeMsg');
+        const d=document.getElementById('eyeDisplay');
+        if(lbl) lbl.textContent='20 min work session';
+        if(msg) msg.textContent='✅ Great! Back to work.';
+        if(d) d.style.color='var(--accent)';
+        setTimeout(()=>{const m=document.getElementById('eyeMsg');if(m&&eyeRunning)m.textContent='';},3000);
+        runEyeTimer();
+      }
+    }
+  },1000);
+}
+function updateEyeDisplay(){
+  const m=Math.floor(eyeSeconds/60), s=eyeSeconds%60;
+  const d=document.getElementById('eyeDisplay');
+  if(d) d.textContent=`${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+}
+function resetEye(){
+  clearInterval(eyeTimer);
+  eyeRunning=false; eyePaused=false;
+  eyePhase='work'; eyeSeconds=20*60;
+  setHealthBtns('eyeStartBtn','eyePauseBtn','eyeResumeBtn','eyeResetBtn','idle');
+  const d=document.getElementById('eyeDisplay');
+  const lbl=document.getElementById('eyePhaseLabel');
+  const msg=document.getElementById('eyeMsg');
+  if(d){d.textContent='20:00';d.style.color='var(--accent)';}
+  if(lbl) lbl.textContent='20 min work session';
+  if(msg) msg.textContent='';
+}
+
+/* ── WATER INTAKE TRACKER ── */
+let waterGoal=8, waterCurrent=0;
+function renderWater(){
+  appEl.innerHTML=`<div class='page-wrap'>
+    <div class='back-row'><button class='back-btn' onclick="go('health')">← Health</button></div>
+    <div class='inner-card'>
+      <h2>💧 Water Intake Tracker</h2>
+      <p class='subtitle'>Track your daily hydration. Stay healthy — drink enough water!</p>
+      <div style='display:flex;gap:10px;align-items:center;margin-bottom:20px'>
+        <label class='field-label' style='margin:0;white-space:nowrap'>Daily Goal (glasses):</label>
+        <input class='ks-input' id='waterGoalInput' type='number' value='8' min='1' max='20' style='max-width:80px' oninput='setWaterGoal(this.value)'>
+      </div>
+      <div style='text-align:center;padding:10px 0 20px'>
+        <div id='waterProgressWrap' style='max-width:300px;margin:0 auto 16px'>
+          <div style='display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px' id='waterGrid'></div>
+        </div>
+        <div style='font-family:Rajdhani,sans-serif;font-size:3rem;font-weight:700;color:#60a5fa;line-height:1'>
+          <span id='waterCurrent'>0</span>/<span id='waterGoalDisplay'>8</span>
+        </div>
+        <div style='font-size:13px;color:var(--muted);margin-bottom:20px'>glasses today</div>
+        <div style='display:flex;gap:10px;justify-content:center;flex-wrap:wrap'>
+          <button class='btn btn-primary' onclick='addWater()'>💧 +1 Glass</button>
+          <button class='btn btn-secondary' onclick='removeWater()'>− Remove Last</button>
+          <button class='btn btn-ghost' onclick='resetWater()'>↺ Reset Day</button>
+        </div>
+        <div id='waterMsg' style='margin-top:16px;font-size:14px;min-height:20px;color:#4ade80'></div>
+      </div>
+      <div class='result-box'>
+        <p>💡 Health experts recommend <strong style='color:#60a5fa'>8 glasses (2L)</strong> of water per day for average adults. Adjust based on your weight, activity and climate.</p>
+      </div>
+    </div>
+  </div>`;
+  renderWaterGrid();
+}
+function setWaterGoal(val){
+  const v=parseInt(val);
+  if(!v||v<1||v>20) return;
+  waterGoal=v;
+  if(waterCurrent>waterGoal) waterCurrent=waterGoal;
+  const g=document.getElementById('waterGoalDisplay');
+  if(g) g.textContent=waterGoal;
+  renderWaterGrid();
+}
+function renderWaterGrid(){
+  const grid=document.getElementById('waterGrid');
+  if(!grid) return;
+  grid.style.gridTemplateColumns=`repeat(${Math.min(waterGoal,4)},1fr)`;
+  grid.innerHTML=Array.from({length:waterGoal},(_,i)=>`
+    <div style='
+      height:60px;border-radius:12px;border:2px solid ${i<waterCurrent?'#60a5fa':'var(--border)'};
+      background:${i<waterCurrent?'rgba(96,165,250,0.2)':'var(--bg2)'};
+      display:flex;align-items:center;justify-content:center;
+      font-size:${i<waterCurrent?'1.4rem':'1rem'};
+      transition:all .3s;
+    '>${i<waterCurrent?'💧':'·'}</div>`).join('');
+  const c=document.getElementById('waterCurrent');
+  if(c) c.textContent=waterCurrent;
+}
+function addWater(){
+  if(waterCurrent>=waterGoal){
+    const msg=document.getElementById('waterMsg');
+    if(msg){msg.textContent='🎉 Goal reached! Great job!';setTimeout(()=>msg.textContent='',3000);}
+    return;
+  }
+  waterCurrent++;
+  renderWaterGrid();
+  if(waterCurrent===waterGoal){
+    const msg=document.getElementById('waterMsg');
+    if(msg) msg.textContent='🎉 Daily goal reached! Stay hydrated!';
+  }
+}
+function removeWater(){
+  if(waterCurrent>0){ waterCurrent--; renderWaterGrid(); }
+}
+function resetWater(){
+  waterCurrent=0; renderWaterGrid();
+  const msg=document.getElementById('waterMsg');
+  if(msg) msg.textContent='';
+}
+
+/* ═══════════════════════ MENSTRUAL CYCLE TRACKER (added) ═══════════════════════ */
+/* ═══════════════════════ IF EARTH WAS... (weight on other worlds, added) ═══════════════════════ */
+const PLANET_GRAVITY=[
+  {name:'Mercury',icon:'☿️',g:0.378},{name:'Venus',icon:'♀️',g:0.907},{name:'The Moon',icon:'🌙',g:0.166},
+  {name:'Mars',icon:'🔴',g:0.377},{name:'Jupiter',icon:'🪐',g:2.36},{name:'Saturn',icon:'💫',g:0.916},
+  {name:'Uranus',icon:'🔵',g:0.889},{name:'Neptune',icon:'🔷',g:1.12},{name:'Pluto',icon:'⚪',g:0.071}
+];
+var pwUnit='kg';
+function renderPlanetWeight(){
+  appEl.innerHTML=`<div class='page-wrap'>
+    <div class='back-row'><button class='back-btn' onclick="go('fun')">← Fun</button></div>
+    <div class='inner-card'>
+      <h2>🪐 If Earth Was...</h2>
+      <p class='subtitle'>See what you'd weigh on every other planet and moon in the solar system.</p>
+      <div id='pwWrap'></div>
+      <button class='btn btn-primary' style='width:100%;margin-top:14px' onclick='calcPlanetWeight()'>🪐 Calculate</button>
+      <div id='pwResults'></div>
+      ${appFooter('planetweight')}
+    </div>
+  </div>`;
+  renderPwInput();
+}
+function pwToggleUnit(u){ pwUnit=u; renderPwInput(); }
+function renderPwInput(){
+  const w=document.getElementById('pwWrap');
+  if(!w)return;
+  w.innerHTML='<label>Your weight <span class="unit-chip-row">'
+    +'<button type="button" class="unit-chip'+(pwUnit==='kg'?' active':'')+'" onclick="pwToggleUnit(\'kg\')">kg</button>'
+    +'<button type="button" class="unit-chip'+(pwUnit==='lb'?' active':'')+'" onclick="pwToggleUnit(\'lb\')">lb</button>'
+    +'</span></label><input type="number" class="ks-input" id="pwWeight" placeholder="'+(pwUnit==='kg'?'e.g. 65':'e.g. 143')+'">';
+}
+function calcPlanetWeight(){
+  const raw=parseFloat(document.getElementById('pwWeight').value);
+  const out=document.getElementById('pwResults');
+  if(!raw||raw<=0){ out.innerHTML="<p style='color:#f87171;text-align:center;font-size:13px;margin-top:10px'>Please enter your weight.</p>"; return; }
+  const kg=pwUnit==='lb'?raw*0.453592:raw;
+  out.innerHTML='<div class="lifestat-grid" style="margin-top:16px">'+PLANET_GRAVITY.map(p=>{
+    const w=kg*p.g;
+    const disp=pwUnit==='lb'?(w/0.453592).toFixed(1)+' lb':w.toFixed(1)+' kg';
+    return `<div class='lifestat-card'><div class='lifestat-icon'>${p.icon}</div><div><div class='lifestat-value'>${disp}</div><div class='lifestat-label'>on ${p.name}</div></div></div>`;
+  }).join('')+'</div>';
+}
+
+/* ═══════════════════════ AGE ON MARS (added) ═══════════════════════ */
+const PLANET_YEARS=[
+  {name:'Mercury',icon:'☿️',days:87.97},{name:'Venus',icon:'♀️',days:224.70},{name:'Mars',icon:'🔴',days:686.98},
+  {name:'Jupiter',icon:'🪐',days:4332.59},{name:'Saturn',icon:'💫',days:10759.22},{name:'Uranus',icon:'🔵',days:30688.5},{name:'Neptune',icon:'🔷',days:60195}
+];
+function renderAgeMars(){
+  appEl.innerHTML=`<div class='page-wrap'>
+    <div class='back-row'><button class='back-btn' onclick="go('fun')">← Fun</button></div>
+    <div class='inner-card'>
+      <h2>🔴 Age on Mars</h2>
+      <p class='subtitle'>How old would you be if you lived on another planet?</p>
+      <label>Date of birth</label>
+      <input type='date' class='ks-input' id='amDob' max='${new Date().toISOString().slice(0,10)}'>
+      <button class='btn btn-primary' style='width:100%;margin-top:14px' onclick='calcAgeMars()'>🔴 Calculate</button>
+      <div id='amResults'></div>
+      ${appFooter('agemars')}
+    </div>
+  </div>`;
+}
+function calcAgeMars(){
+  const dobStr=document.getElementById('amDob').value;
+  const out=document.getElementById('amResults');
+  if(!dobStr){ out.innerHTML="<p style='color:#f87171;text-align:center;font-size:13px;margin-top:10px'>Please enter your date of birth.</p>"; return; }
+  const dob=new Date(dobStr+'T00:00:00');
+  const now=new Date();
+  if(dob>now){ out.innerHTML="<p style='color:#f87171;text-align:center;font-size:13px;margin-top:10px'>That date is in the future!</p>"; return; }
+  const totalDays=(now-dob)/86400000;
+  const marsYears=totalDays/686.98;
+  const marsSols=totalDays/1.02749;
+  out.innerHTML=`
+    <div class='cycle-result-box' style='margin-top:16px'>
+      <div class='cycle-phase-tag'>🔴 On Mars, you'd be</div>
+      <div class='cycle-day-big'>${marsYears.toFixed(2)} Martian years old</div>
+      <p style='color:var(--muted);font-size:13px'>That's ${Math.floor(marsSols).toLocaleString()} Martian sols (Mars-days) since you were born.</p>
+    </div>
+    <div class='lifestat-grid'>${PLANET_YEARS.map(p=>{
+      const age=totalDays/p.days;
+      return `<div class='lifestat-card'><div class='lifestat-icon'>${p.icon}</div><div><div class='lifestat-value'>${age.toFixed(2)}</div><div class='lifestat-label'>years old on ${p.name}</div></div></div>`;
+    }).join('')}</div>`;
+}
+
+/* ═══════════════════════ MOON PHASE CALCULATOR (added) ═══════════════════════ */
+const MOON_PHASES=[
+  {name:'New Moon',icon:'🌑'},{name:'Waxing Crescent',icon:'🌒'},{name:'First Quarter',icon:'🌓'},{name:'Waxing Gibbous',icon:'🌔'},
+  {name:'Full Moon',icon:'🌕'},{name:'Waning Gibbous',icon:'🌖'},{name:'Last Quarter',icon:'🌗'},{name:'Waning Crescent',icon:'🌘'}
+];
+function renderMoonPhase(){
+  const today=new Date().toISOString().slice(0,10);
+  appEl.innerHTML=`<div class='page-wrap'>
+    <div class='back-row'><button class='back-btn' onclick="go('fun')">← Fun</button></div>
+    <div class='inner-card'>
+      <h2>🌙 Moon Phase Calculator</h2>
+      <p class='subtitle'>See the moon's phase for tonight, or any date you pick.</p>
+      <label>Date</label>
+      <input type='date' class='ks-input' id='mpDate' value='${today}'>
+      <button class='btn btn-primary' style='width:100%;margin-top:14px' onclick='calcMoonPhase()'>🌙 Show Phase</button>
+      <div id='mpResults'></div>
+      ${appFooter('moonphase')}
+    </div>
+  </div>`;
+  calcMoonPhase();
+}
+function calcMoonPhase(){
+  const dateEl=document.getElementById('mpDate');
+  const dateStr=dateEl.value||new Date().toISOString().slice(0,10);
+  const date=new Date(dateStr+'T12:00:00Z');
+  const knownNewMoon=new Date('2000-01-06T18:14:00Z');
+  const synodicMonth=29.530588853;
+  const daysSince=(date-knownNewMoon)/86400000;
+  let phaseFraction=(daysSince/synodicMonth)%1;
+  if(phaseFraction<0)phaseFraction+=1;
+  const idx=Math.round(phaseFraction*8)%8;
+  const phase=MOON_PHASES[idx];
+  const illumination=Math.round((1-Math.cos(phaseFraction*2*Math.PI))/2*100);
+  document.getElementById('mpResults').innerHTML=`
+    <div class='cycle-result-box' style='margin-top:16px'>
+      <div style='font-size:4rem;line-height:1'>${phase.icon}</div>
+      <div class='cycle-day-big' style='margin-top:8px'>${phase.name}</div>
+      <p style='color:var(--muted);font-size:13px'>~${illumination}% illuminated</p>
+    </div>`;
+}
+
+/* ═══════════════════════ WHAT IF CALCULATORS (added) ═══════════════════════ */
+function renderWhatIf(){
+  appEl.innerHTML=`<div class='page-wrap'>
+    <div class='back-row'><button class='back-btn' onclick="go('fun')">← Fun</button></div>
+    <div class='inner-card'>
+      <h2>🤔 What If Calculators</h2>
+      <p class='subtitle'>A few playful hypotheticals based on your date of birth.</p>
+      <label>Date of birth</label>
+      <input type='date' class='ks-input' id='wiDob' max='${new Date().toISOString().slice(0,10)}'>
+      <button class='btn btn-primary' style='width:100%;margin-top:14px' onclick='calcWhatIf()'>🤔 Show Me</button>
+      <div id='wiResults'></div>
+      <div class='info-box'>These are just-for-fun estimates using simple averages — not financial or medical advice.</div>
+      ${appFooter('whatif')}
+    </div>
+  </div>`;
+}
+function calcWhatIf(){
+  const dobStr=document.getElementById('wiDob').value;
+  const out=document.getElementById('wiResults');
+  if(!dobStr){ out.innerHTML="<p style='color:#f87171;text-align:center;font-size:13px;margin-top:10px'>Please enter your date of birth.</p>"; return; }
+  const dob=new Date(dobStr+'T00:00:00');
+  const now=new Date();
+  if(dob>now){ out.innerHTML="<p style='color:#f87171;text-align:center;font-size:13px;margin-top:10px'>That date is in the future!</p>"; return; }
+  const totalSeconds=(now-dob)/1000;
+  const totalDays=totalSeconds/86400;
+  const totalYears=totalDays/365.25;
+
+  // ₹1/second since birth
+  const moneyMachine=totalSeconds*1;
+
+  // ₹10/day invested since birth, ~8% avg annual return, compounded monthly
+  const monthlyRate=0.08/12;
+  const months=Math.max(1,Math.floor(totalDays/30.44));
+  const monthlyContribution=10*30.44;
+  let investBalance=0;
+  for(let i=0;i<months;i++){ investBalance=(investBalance+monthlyContribution)*(1+monthlyRate); }
+
+  // hours spent asleep (~8h/day average) — "extra waking life" framing
+  const sleepHours=totalDays*8;
+
+  out.innerHTML=`
+    <div class='lifestat-grid' style='margin-top:16px'>
+      <div class='lifestat-card'><div class='lifestat-icon'>💰</div><div><div class='lifestat-value'>₹${Math.round(moneyMachine).toLocaleString()}</div><div class='lifestat-label'>if you'd earned ₹1 every second since birth</div></div></div>
+      <div class='lifestat-card'><div class='lifestat-icon'>📈</div><div><div class='lifestat-value'>₹${Math.round(investBalance).toLocaleString()}</div><div class='lifestat-label'>if ₹10/day had been invested at ~8%/yr since birth</div></div></div>
+      <div class='lifestat-card'><div class='lifestat-icon'>😴</div><div><div class='lifestat-value'>${Math.round(sleepHours).toLocaleString()}</div><div class='lifestat-label'>hours spent asleep so far (~8h/day avg)</div></div></div>
+      <div class='lifestat-card'><div class='lifestat-icon'>🌍</div><div><div class='lifestat-value'>${totalYears.toFixed(1)}</div><div class='lifestat-label'>trips around the Sun</div></div></div>
+    </div>`;
+}
+
+function renderCycleTracker(){
+  appEl.innerHTML=`<div class='page-wrap'>
+    <div class='back-row'><button class='back-btn' onclick="go('health')">← Health</button></div>
+    <div class='inner-card'>
+      <h2>🌸 Menstrual Cycle Tracker</h2>
+      <p class='subtitle'>Estimate your next period, ovulation window, and current cycle phase.</p>
+
+      <div class='info-box'>
+        ⚠️ This is an estimate based on averages, not a medical prediction. Real cycles can shift because of stress, illness, travel, medication, and many other factors. This tool is not a form of contraception and should not be used to prevent or plan pregnancy. If your cycles are irregular, painful, or you have any health concerns, please talk to a doctor.<br><br>
+        🔒 Nothing you enter here is stored or sent anywhere — it lives only in this browser tab and disappears the moment you refresh.
+      </div>
+
+      <div class='cycle-form'>
+        <div>
+          <label>First day of your last period</label>
+          <input type='date' class='ks-input' id='cycleLastDate'>
+        </div>
+        <div>
+          <label>Average cycle length (days between periods) — <span id='cycleLenVal'>28</span> days</label>
+          <input type='range' min='21' max='40' value='28' id='cycleLen' style='width:100%' oninput="document.getElementById('cycleLenVal').textContent=this.value">
+        </div>
+        <div>
+          <label>Average period length — <span id='periodLenVal'>5</span> days</label>
+          <input type='range' min='2' max='10' value='5' id='periodLen' style='width:100%' oninput="document.getElementById('periodLenVal').textContent=this.value">
+        </div>
+        <button class='btn btn-primary' style='width:100%' onclick='calcCycle()'>🌸 Calculate</button>
+      </div>
+
+      <div id='cycleOutput'></div>
+    </div>
+  </div>`;
+}
+function calcCycle(){
+  const out=document.getElementById('cycleOutput');
+  const dateVal=document.getElementById('cycleLastDate').value;
+  if(!dateVal){ out.innerHTML="<p style='color:#f87171;text-align:center;font-size:13px'>Please enter the first day of your last period.</p>"; return; }
+  const cycleLen=parseInt(document.getElementById('cycleLen').value);
+  const periodLen=parseInt(document.getElementById('periodLen').value);
+  const lastStart=new Date(dateVal+'T00:00:00');
+  const today=new Date();today.setHours(0,0,0,0);
+
+  const msPerDay=86400000;
+  let dayInCycle=Math.floor((today-lastStart)/msPerDay)%cycleLen;
+  if(dayInCycle<0) dayInCycle+=cycleLen;
+  const cycleDay=dayInCycle+1;
+
+  const ovulationDay=cycleLen-14;
+  const fertileStart=Math.max(1,ovulationDay-5);
+  const fertileEnd=ovulationDay+1;
+
+  let phase,phaseDesc;
+  if(cycleDay<=periodLen){ phase='Menstrual Phase'; phaseDesc='Your period — the uterine lining is shedding.'; }
+  else if(cycleDay<fertileStart){ phase='Follicular Phase'; phaseDesc='Body preparing an egg; energy often starts rising.'; }
+  else if(cycleDay>=fertileStart && cycleDay<=fertileEnd){ phase='Fertile Window'; phaseDesc='Ovulation is near — the highest-chance days for conception.'; }
+  else{ phase='Luteal Phase'; phaseDesc='After ovulation; PMS symptoms can appear in the days before your next period.'; }
+
+  const nextPeriod=new Date(lastStart);
+  let cyclesToAdd=Math.floor((today-lastStart)/msPerDay/cycleLen)+1;
+  nextPeriod.setDate(nextPeriod.getDate()+cyclesToAdd*cycleLen);
+
+  const ovulationDate=new Date(nextPeriod);ovulationDate.setDate(ovulationDate.getDate()-14);
+  const fertileStartDate=new Date(ovulationDate);fertileStartDate.setDate(fertileStartDate.getDate()-5);
+  const fertileEndDate=new Date(ovulationDate);fertileEndDate.setDate(fertileEndDate.getDate()+1);
+
+  out.innerHTML=`
+    <div class='cycle-result-box'>
+      <div class='cycle-phase-tag'>${phase}</div>
+      <div class='cycle-day-big'>Day ${cycleDay} of ${cycleLen}</div>
+      <p style='color:var(--muted);font-size:13px'>${phaseDesc}</p>
+    </div>
+    <div class='cycle-grid'>
+      <div class='cycle-stat'><div class='lbl'>NEXT PERIOD (EST.)</div><div class='val'>${fmtShort(nextPeriod)}</div></div>
+      <div class='cycle-stat'><div class='lbl'>ESTIMATED OVULATION</div><div class='val'>${fmtShort(ovulationDate)}</div></div>
+      <div class='cycle-stat' style='grid-column:1/-1'><div class='lbl'>FERTILE WINDOW</div><div class='val'>${fmtShort(fertileStartDate)} – ${fmtShort(fertileEndDate)}</div></div>
+    </div>
+    <div class='info-box'>These dates are estimates only and shift naturally cycle to cycle. Tracking over a few months yourself will give a more personal picture than any calculator can.</div>
+  `;
+}
+renderHome();
+
+/* ═══════════════════════════════════════
+   OTHER SERVICES
+═══════════════════════════════════════ */
+function renderServices(){
+  appEl.innerHTML=`<div class='page-wrap'>
+    <div class='back-row'><button class='back-btn' onclick="go('home')">← Home</button></div>
+    <div class='inner-card'>
+      <h2>🌐 Other Services</h2>
+      <p style='color:var(--muted);font-size:13px;margin-bottom:20px'>More free platforms by Kiran Sankar — all free, no ads.</p>
+      <div class='app-card' onclick="window.open('https://krantech.github.io/SoftBooks/','_blank')" style='cursor:pointer;margin-bottom:10px'>
+        <div class='app-card-left'>
+          <div class='app-icon'>📚</div>
+          <div>
+            <div class='app-name'>SoftBooks</div>
+            <div class='app-desc'>Free PDF book library — read anything, anytime</div>
+          </div>
+        </div>
+        <div class='app-arrow'>↗</div>
+      </div>
+      <p style='color:var(--muted);font-size:12px;text-align:center;margin-top:20px'>More services coming soon...</p>
+    </div>
+  </div>`;
+}
+
